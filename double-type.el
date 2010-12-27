@@ -6,7 +6,7 @@
 ;; Created: Fri Dec 24 02:33:06 2010 JST
 ;; Keywords: abbrev convenience emulations wp
 ;; Revision: $Id$
-;; URL: 
+;; URL: http://www.emacswiki.org/emacs/double-type.el
 ;; GitHub: http://github.com/k-talo/double-type.el
 
 ;; This file is not part of GNU Emacs.
@@ -96,11 +96,15 @@
 ;; ==============
 ;; - Codes aside, this document should be rewritten.
 ;;   My English sucks.
+;; - While defining keyboard macro, "double type" event will be
+;;   disabled because of technical reason.
 ;;
-;; 
+;;
 ;; WISH LIST
 ;; =========
 ;; - Show "single-type" and "double-type" bindings by `where-is'.
+;; - Show commands bound to "double-type" event by `describe-key'.
+;; - Deal with keyboard macro.
 
 ;;; Change Log:
 
@@ -108,11 +112,32 @@
 
 (provide 'double-type)
 
+(defconst double-type/version "0.9.0")
+
 (eval-when-compile
   (require 'cl))
 
-(defvar double-type/timeout 0.4)
-(defvar double-type/use-prompt t)
+
+;;; ===========================================================================
+;;;
+;;;  User customizable things.
+;;;
+;;; ===========================================================================
+
+(defgroup double-type nil
+  "\"Double Type\" key event."
+  :group 'convenience)
+
+(defcustom double-type/timeout 0.4
+  "Interval of a \"double type\" key event in seconds."
+  :type  'float
+  :group 'double-type)
+
+(defcustom double-type/use-prompt t
+  "Non nil to display prompt for prefix keys which are
+bound to a key by `double-type/define-key'."
+  :type  'boolean
+  :group 'double-type)
 
 
 ;;; ===========================================================================
@@ -123,7 +148,7 @@
 
 ;; ----------------------------------------------------------------------------
 ;;  (double-type/define-key keymap key &key on-single-type on-double-type)
-;;                                      => HANDLER COMMAND ASSIGNED TO THE KEY
+;;                                                                     => VOID
 ;; ----------------------------------------------------------------------------
 (defun* double-type/define-key (keymap key
                                        &key
@@ -150,9 +175,7 @@ key's definition:
     or another symbol whose function definition is used, etc.).
 
 See also `define-key'."
-  (let ((fn-name (intern
-                  (format "double-type/cmd-%s"
-                          (gensym)))))
+  (let ((fn-name (gensym "double-type/cmd-")))
     (put fn-name 'double-type/cmd-p t)
     
     ;; Bind a closure, which handles event by the KEY, to a KEY.
@@ -189,11 +212,12 @@ EV-DATA will be used to handle a key event."
   ;;
   (let* ((ev-tracking last-command-event)
          (ev-read     nil)
-         (ev-next     (with-timeout
-                          (double-type/timeout 'timeout)
-                        (setq ev-read
-                              (read-event nil)))))
-    (message "TRACK: %s, NEXT: %s, READ: %s" ev-tracking ev-next ev-read)
+         (ev-next     (when (and (not defining-kbd-macro)
+                                 (not executing-kbd-macro))
+                        (with-timeout
+                            (double-type/timeout 'timeout)
+                          (setq ev-read
+                                (read-event nil))))))
     (cond
      ;; Got "double type" event.
      ;;
