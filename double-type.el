@@ -252,12 +252,13 @@ EV-DATA will be used to handle a key event."
      ;; Got single-typing event by timeout, or another event.
      ;;
      (t
+      (when ev-read
+        ;; Unread another event if any.
+        (push ev-read unread-command-events))
+      
       (double-type/.do-key :ev-tracking ev-tracking
                            :ev-kind     :single-type
-                           :ev-data     ev-data)
-      ;; Unread another event if any.
-      (when ev-read
-        (push ev-read unread-command-events))))))
+                           :ev-data     ev-data)))))
 
 ;; ----------------------------------------------------------------------------
 ;;  (double-type/.do-key &key ev-tracking ev-kind ev-data) => VOID
