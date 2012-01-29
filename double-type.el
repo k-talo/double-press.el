@@ -215,6 +215,8 @@ EV-DATA will be used to handle a key event."
                        ;; Executing double-typing event by kbd-macro.
                        ;;
                        ((and executing-kbd-macro
+                             (<= (1+ executing-kbd-macro-index)
+                                 (1- (length executing-kbd-macro)))
                              (eq
                               (elt executing-kbd-macro (1- executing-kbd-macro-index))
                               (elt executing-kbd-macro executing-kbd-macro-index))
