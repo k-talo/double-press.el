@@ -49,8 +49,8 @@
 ;;
 ;; USING
 ;; =====
-;; You can bind commands to keyboard events "single type" and
-;; "double type" on a key via a function `double-type/define-key'
+;; You can bind commands to keyboard events "single-typing" and
+;; "double-typing" on a key via a function `double-type/define-key'
 ;; which is provided by this library.
 ;;
 ;;   Examples)
@@ -87,7 +87,7 @@
 ;;                             :on-single-type 'kill-region
 ;;                             :on-double-type ctl-x-4-map)
 ;;
-;;   NOTE: You had better not to assign "double type" event to the
+;;   NOTE: You had better not to assign "double-typing" event to the
 ;;         keys which will be typed repeatedly, like "C-f", "C-b"
 ;;         and so on. (Such assignment may be annoying to you...)
 ;;
@@ -124,11 +124,11 @@
 ;;; ===========================================================================
 
 (defgroup double-type nil
-  "\"Double Type\" key event."
+  "\"Double Typing\" key event."
   :group 'convenience)
 
 (defcustom double-type/timeout 0.4
-  "Interval of a \"double type\" key event in seconds."
+  "Interval of a \"double typing\" key event in seconds."
   :type  'float
   :group 'double-type)
 
@@ -207,12 +207,12 @@ EV-DATA is a list like:
    :double-type BINDING)
 
 EV-DATA will be used to handle a key event."
-  ;; Start tracking "double-type" key event of a key.
+  ;; Start tracking "double-typing" key event of a key.
   ;;
   (let* ((ev-tracking last-command-event)
          (ev-read     nil)
          (ev-next     (cond
-                       ;; Executing double-typing event by kbd-macro.
+                       ;; Executing "double-typing" event by kbd-macro.
                        ;;
                        ((and executing-kbd-macro
                              (eq
@@ -224,32 +224,32 @@ EV-DATA will be used to handle a key event."
                         (setq executing-kbd-macro-index
                               (+ executing-kbd-macro-index 2))
                               ev-tracking)
-                       ;; Executing single-typing event by kbd-macro.
+                       ;; Executing "single-typing" event by kbd-macro.
                        ;;
                        (executing-kbd-macro
                         nil)
                        ;; Not executing kbd-macro.
-                       ;; Wait for double-typing event, or another event.
+                       ;; Wait for "double-typing" event, or another event.
                        (t
                         (with-timeout
                             (double-type/timeout 'timeout)
                           (setq ev-read
                                 (read-event nil)))))))
     (cond
-     ;; Got double-typing event.
+     ;; Got "double-typing" event.
      ;;
      ((eq ev-next
           ev-tracking)
       
       (when defining-kbd-macro
-        ;; Remember this event is double-typing event.
+        ;; Remember this event is "double-typing" event.
         (store-kbd-macro-event 'double))
       
       (double-type/.do-key :ev-tracking ev-tracking
                            :ev-kind     :double-type
                            :ev-data     ev-data))
      
-     ;; Got single-typing event by timeout, or another event.
+     ;; Got "single-typing" event by timeout, or another event.
      ;;
      (t
       (when ev-read
