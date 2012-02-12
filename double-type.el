@@ -102,6 +102,7 @@
 ;; =========
 ;; - Show "single-type" and "double-type" bindings by `where-is'.
 ;; - Show commands bound to "double-type" event by `describe-key'.
+;; - Cope with "emacs -nw".
 
 ;;; Change Log:
 
