@@ -102,10 +102,10 @@
 ;; =========
 ;; - Show "single-type" and "double-type" bindings by `where-is'.
 ;; - Show commands bound to "double-type" event by `describe-key'.
-;; - Cope with "emacs -nw".
 
 ;;; Change Log:
 
+;;   - Cope with "emacs -nw".
 ;;   - Deal with keyboard macro.
 
 ;;; Code:
@@ -180,7 +180,8 @@ See also `define-key'."
                         (define-key keymap [single] (make-sparse-keymap))))
         (double-map (or (lookup-key keymap [double])
                         (define-key keymap [double] (make-sparse-keymap)))))
-    (put fn-name 'double-type/cmd-p t)
+    (put fn-name 'double-type/cmd-p (list :single-type on-single-type
+                                          :double-type on-double-type))
     
     ;; Bind a closure, which handles event by the KEY, to a KEY.
     (setf (symbol-function fn-name)
@@ -236,69 +237,71 @@ EV-DATA is a list like:
 EV-DATA will be used to handle a key event."
   ;; Start tracking "double-typing" key event of a key.
   ;;
-  (let* ((ev-tracking last-command-event)
-         (ev-read     nil)
-         (ev-next     (cond
-                       ;; Executing "double-typing" event by kbd-macro.
-                       ;;
-                       ((and executing-kbd-macro
-                             (<= (1+ executing-kbd-macro-index)
-                                 (1- (length executing-kbd-macro)))
-                             (eq
-                              (elt executing-kbd-macro (1- executing-kbd-macro-index))
-                              (elt executing-kbd-macro executing-kbd-macro-index))
-                             (eq
-                              (elt executing-kbd-macro (1+ executing-kbd-macro-index))
-                              'double))
-                        (setq executing-kbd-macro-index
-                              (+ executing-kbd-macro-index 2))
-                              ev-tracking)
-                       ;; Executing "single-typing" event by kbd-macro.
-                       ;;
-                       (executing-kbd-macro
-                        nil)
-                       ;; Not executing kbd-macro.
-                       ;; Wait for "double-typing" event, or another event.
-                       (t
-                        (with-timeout
-                            (double-type/timeout 'timeout)
-                          (setq ev-read
-                                (read-event nil)))))))
+  (let* ((keys-tracking (this-command-keys-vector))
+         (keys-read     nil)
+         (keys-next     (cond
+                         ;; Executing "double-typing" event by kbd-macro.
+                         ;;
+                         ((and executing-kbd-macro
+                               (<= (1+ executing-kbd-macro-index)
+                                   (1- (length executing-kbd-macro)))
+                               (eq
+                                (elt executing-kbd-macro (1- executing-kbd-macro-index))
+                                (elt executing-kbd-macro executing-kbd-macro-index))
+                               (eq
+                                (elt executing-kbd-macro (1+ executing-kbd-macro-index))
+                                'double))
+                          (setq executing-kbd-macro-index
+                                (+ executing-kbd-macro-index 2))
+                          keys-tracking)
+                         ;; Executing "single-typing" event by kbd-macro.
+                         ;;
+                         (executing-kbd-macro
+                          nil)
+                         ;; Not executing kbd-macro.
+                         ;; Wait for "double-typing" event, or another event.
+                         (t
+                          (with-timeout
+                              (double-type/timeout 'timeout)
+                            (setq keys-read
+                                  (read-key-sequence-vector nil)))))))
     (cond
      ;; Got "double-typing" event.
      ;;
-     ((eq ev-next
-          ev-tracking)
+     ((equal keys-next
+             keys-tracking)
       
       (when defining-kbd-macro
         ;; Remember this event is "double-typing" event.
         (store-kbd-macro-event 'double))
       
-      (double-type/.do-key :ev-tracking ev-tracking
-                           :ev-kind     :double-type
-                           :ev-data     ev-data))
+      (double-type/.do-key :ev-keys keys-tracking
+                           :ev-kind :double-type
+                           :ev-data ev-data))
      
      ;; Got "single-typing" event by timeout, or another event.
      ;;
      (t
-      (when ev-read
+      (when keys-read
         ;; Unread another event if any.
-        (push ev-read unread-command-events))
+        (setq unread-command-events
+              (append (listify-key-sequence keys-read)
+                      unread-command-events)))
       
-      (double-type/.do-key :ev-tracking ev-tracking
-                           :ev-kind     :single-type
-                           :ev-data     ev-data)))))
+      (double-type/.do-key :ev-keys keys-tracking
+                           :ev-kind :single-type
+                           :ev-data ev-data)))))
 
 ;; ----------------------------------------------------------------------------
-;;  (double-type/.do-key &key ev-tracking ev-kind ev-data) => VOID
+;;  (double-type/.do-key &key ev-keys ev-kind ev-data) => VOID
 ;; ----------------------------------------------------------------------------
-(defun* double-type/.do-key (&key ev-tracking ev-kind ev-data)
+(defun* double-type/.do-key (&key ev-keys ev-kind ev-data)
   "Run a thing bound to current key event."
   ;; FIXME: Write codes which handles `indirect entry'.
   (let ((binding  (cadr (memq ev-kind ev-data)))
         (key-desc (format "%s%s%s"
                           (if (eq ev-kind :double-type) "<double-" "")
-                          (single-key-description ev-tracking)
+                          (key-description ev-keys)
                           (if (eq ev-kind :double-type) ">" ""))))
     ;; When binding is a function, get `symbol-function'
     ;; of a binding.
