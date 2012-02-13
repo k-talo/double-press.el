@@ -8,6 +8,7 @@
 ;; Revision: $Id$
 ;; URL: http://www.emacswiki.org/emacs/double-type.el
 ;; GitHub: http://github.com/k-talo/double-type.el
+;; Version: 0.10.0
 
 ;; This file is not part of GNU Emacs.
 
@@ -100,11 +101,12 @@
 ;;
 ;; WISH LIST
 ;; =========
-;; - Show "single-type" and "double-type" bindings by `where-is'.
 ;; - Show commands bound to "double-type" event by `describe-key'.
 
 ;;; Change Log:
 
+;; v0.10.0
+;;   - Show "single-type" and "double-type" bindings by `where-is'.
 ;;   - Cope with "emacs -nw".
 ;;   - Deal with keyboard macro.
 
@@ -112,7 +114,7 @@
 
 (provide 'double-type)
 
-(defconst double-type/version "0.9.0")
+(defconst double-type/version "0.10.0")
 
 (eval-when-compile
   (require 'cl))
