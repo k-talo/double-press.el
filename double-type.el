@@ -105,7 +105,7 @@
 
 ;;; Change Log:
 
-;; v0.10.0
+;; v0.10.0  Mon Feb 13 23:25:38 2012 JST
 ;;   - Show "single-type" and "double-type" bindings by `where-is'.
 ;;   - Cope with "emacs -nw".
 ;;   - Deal with keyboard macro.
