@@ -1,12 +1,10 @@
 ;; double-type.el --- keyboard operation method corresponding to double click on a mouse. -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2010-2012 K-talo Miyazaki, all rights reserved.
+;; Copyright (C) 2010-2012, 2025 K-talo Miyazaki, all rights reserved.
 
 ;; Author: K-talo Miyazaki <Keitaro dot Miyazaki at gmail dot com>
 ;; Created: Fri Dec 24 02:33:06 2010 JST
 ;; Keywords: abbrev convenience emulations wp
-;; Revision: $Id$
-;; URL: http://www.emacswiki.org/emacs/double-type.el
 ;; GitHub: http://github.com/k-talo/double-type.el
 ;; Version: 0.10.0
 
@@ -95,8 +93,6 @@
 ;;
 ;; KNOWN PROBLEMS
 ;; ==============
-;; - Codes aside, this document should be rewritten.
-;;   My English sucks.
 ;;
 ;;
 ;; WISH LIST
