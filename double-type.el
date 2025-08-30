@@ -152,10 +152,10 @@ bound to a key by `double-type/define-key'."
 ;;  (double-type/define-key keymap key &key on-single-type on-double-type)
 ;;                                                                     => VOID
 ;; ----------------------------------------------------------------------------
-(defun* double-type/define-key (keymap key
-                                       &key
-                                       on-single-type
-                                       on-double-type)
+(cl-defun double-type/define-key (keymap key
+                                         &key
+                                         on-single-type
+                                         on-double-type)
   "In KEYMAP, define key sequence KEY as ON-SINGLE-TYPE and
 ON-DOUBLE-TYPE.
 
@@ -297,7 +297,7 @@ EV-DATA will be used to handle a key event."
 ;; ----------------------------------------------------------------------------
 ;;  (double-type/.do-key &key ev-keys ev-kind ev-data) => VOID
 ;; ----------------------------------------------------------------------------
-(defun* double-type/.do-key (&key ev-keys ev-kind ev-data)
+(cl-defun double-type/.do-key (&key ev-keys ev-kind ev-data)
   "Run a thing bound to current key event."
   ;; FIXME: Write codes which handles `indirect entry'.
   (let ((binding  (cadr (memq ev-kind ev-data)))
@@ -349,7 +349,7 @@ EV-DATA will be used to handle a key event."
                          binding)))
       (when (memq binding seen)
         (error "Loop in binding of %s." key-desc))
-      (pushnew binding seen)
+      (cl-pushnew binding seen)
       (setq binding (symbol-function binding)))
     binding))
 
