@@ -206,7 +206,7 @@ See also `define-key'."
 ;;;
 ;;; ===========================================================================
 
-(defadvice define-key (before double-type/define-key-hook (keymap key def))
+(defun double-type/.define-key-advice (keymap key _def &optional _remove)
   "Clear hints for `where-is'."
   (let ((key-def (lookup-key keymap key)))
     (when (and (symbolp key-def)
@@ -216,8 +216,7 @@ See also `define-key'."
         ;; Clear hints for `where-is'.
         (and (keymapp single-map) (define-key single-map key nil))
         (and (keymapp double-map) (define-key double-map key nil))))))
-;; To avoid strange error on Emacs 29.1, run `ad-activate' with idle timer.
-(run-with-idle-timer 0 nil (lambda () (ad-activate 'define-key)))
+(advice-add 'define-key :before #'double-type/.define-key-advice)
 
 
 ;;; ===========================================================================
