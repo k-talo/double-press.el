@@ -1,4 +1,4 @@
-;; double-type.el --- keyboard operation method corresponding to double click on a mouse.
+;; double-type.el --- keyboard operation method corresponding to double click on a mouse. -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2010-2012 K-talo Miyazaki, all rights reserved.
 
