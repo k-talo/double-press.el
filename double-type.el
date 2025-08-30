@@ -216,7 +216,8 @@ See also `define-key'."
         ;; Clear hints for `where-is'.
         (and (keymapp single-map) (define-key single-map key nil))
         (and (keymapp double-map) (define-key double-map key nil))))))
-(ad-activate 'define-key)
+;; To avoid strange error on Emacs 29.1, run `ad-activate' with idle timer.
+(run-with-idle-timer 0 nil (lambda () (ad-activate 'define-key)))
 
 
 ;;; ===========================================================================
