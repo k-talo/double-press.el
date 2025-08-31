@@ -159,6 +159,12 @@ The timeout for detecting a double-press can be customized by setting the `doubl
 - Temporary directory note (batch test on restricted environments):
   - `mkdir -p .tmp && TMPDIR=$PWD/.tmp emacs -Q --batch -L . -l double-type.el -l test-double-type.el -f ert-run-tests-batch-and-exit`
 
+## Known Bugs
+
+- Editing keyboard macros that include double-type key sequences with `kmacro-step-edit-macro` (`C-x C-k SPC`) may corrupt the macro contents.
+  - Workaround: Use `edit-kbd-macro` (`C-x C-k e`) to edit, and finish with `C-c C-c`.
+  - This limitation applies only when the macro contains double-type sequences; ordinary macros are unaffected.
+
 ## License
 
 This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
