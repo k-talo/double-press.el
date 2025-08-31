@@ -142,6 +142,23 @@ The timeout for detecting a double-press can be customized by setting the `doubl
 (setq double-type/timeout 0.3) ;; Set to 0.3 seconds
 ```
 
+## Development: Compile & Test
+
+- Byte-compile:
+  - Makefile: `make compile`
+  - Direct: `emacs -Q --batch -L . -f batch-byte-compile double-type.el`
+
+- Run tests (ERT):
+  - Makefile: `make test`
+  - Direct: `emacs -Q --batch -L . -l double-type.el -l test-double-type.el -f ert-run-tests-batch-and-exit`
+
+- macOS custom Emacs path example:
+  - `make test EMACS="/Applications/Emacs.app/Contents/MacOS/Emacs"`
+  - Direct: `"/Applications/Emacs.app/Contents/MacOS/Emacs" -Q --batch -L . -l double-type.el -l test-double-type.el -f ert-run-tests-batch-and-exit`
+
+- Temporary directory note (batch test on restricted environments):
+  - `mkdir -p .tmp && TMPDIR=$PWD/.tmp emacs -Q --batch -L . -l double-type.el -l test-double-type.el -f ert-run-tests-batch-and-exit`
+
 ## License
 
-This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version..
+This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
