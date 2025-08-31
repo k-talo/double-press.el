@@ -112,8 +112,8 @@
 
 (defconst double-type/version "0.10.0")
 
-(eval-when-compile
-  (require 'cl))
+(eval-and-compile
+  (require 'cl-lib))
 
 
 ;;; ===========================================================================
@@ -183,8 +183,9 @@ See also `define-key'."
     
     ;; Bind a closure, which handles event by the KEY, to a KEY.
     (setf (symbol-function fn-name)
-          (lexical-let ((on-single-type on-single-type)
-                        (on-double-type on-double-type))
+          ;; NOTE: use lexical-let in non lexical-binding environment.
+          (let ((on-single-type on-single-type)
+                (on-double-type on-double-type))
             #'(lambda ()
                 (interactive)
                 (funcall 'double-type/.track-event
