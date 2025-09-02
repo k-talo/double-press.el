@@ -173,14 +173,13 @@ key's definition:
     or another symbol whose function definition is used, etc.).
 
 See also `define-key'."
-  (let ((fn-name (gensym "double-type/cmd-"))
+  (let ((fn-name (gensym "double-type/dispatcher-"))
         (single-map (or (lookup-key keymap [single])
                         (define-key keymap [single] (make-sparse-keymap))))
         (double-map (or (lookup-key keymap [double])
                         (define-key keymap [double] (make-sparse-keymap))))
         (doc-string (double-type/doc/.dispatcher-desc on-single-type on-double-type)))
-    (put fn-name 'double-type/cmd-p (list :single-type on-single-type
-                                          :double-type on-double-type))
+    (put fn-name 'double-type/dispatcher-p t)
     
     ;; Bind a closure, which handles event by the KEY, to a KEY.
     (setf (symbol-function fn-name)
@@ -210,7 +209,7 @@ See also `define-key'."
   "Clear hints for `where-is'."
   (let ((key-def (lookup-key keymap key)))
     (when (and (symbolp key-def)
-               (get key-def 'double-type/cmd-p))
+               (get key-def 'double-type/dispatcher-p))
       (let ((single-map (lookup-key keymap [single]))
             (double-map (lookup-key keymap [double])))
         ;; Clear hints for `where-is'.
