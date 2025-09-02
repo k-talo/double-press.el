@@ -177,7 +177,8 @@ See also `define-key'."
         (single-map (or (lookup-key keymap [single])
                         (define-key keymap [single] (make-sparse-keymap))))
         (double-map (or (lookup-key keymap [double])
-                        (define-key keymap [double] (make-sparse-keymap)))))
+                        (define-key keymap [double] (make-sparse-keymap))))
+        (doc-string (double-type/doc/.dispatcher-desc on-single-type on-double-type)))
     (put fn-name 'double-type/cmd-p (list :single-type on-single-type
                                           :double-type on-double-type))
     
@@ -187,6 +188,7 @@ See also `define-key'."
           (let ((on-single-type on-single-type)
                 (on-double-type on-double-type))
             #'(lambda ()
+                (:documentation doc-string)
                 (interactive)
                 (funcall 'double-type/.track-event
                          (list :single-type on-single-type
@@ -197,6 +199,7 @@ See also `define-key'."
     
     (define-key keymap key fn-name)))
 
+
 ;;; ===========================================================================
 ;;;
 ;;;  Advices
@@ -372,5 +375,81 @@ when it is a prefix key."
                        (key-description key))))
       (setq binding key-def)))
   binding)
+
+
+;;; ===========================================================================
+;;;
+;;;  Manipulate doc string.
+;;;
+;;; ===========================================================================
+
+;; ----------------------------------------------------------------------------
+;;  (double-type/doc/.dispatcher-desc single-key-def double-key-def) => string
+;; ----------------------------------------------------------------------------
+(defun double-type/doc/.dispatcher-desc (single-key-def double-key-def)
+  ;; Provide a docstring so `describe-key` can show single/double bindings.
+  (let* ((single-key-def-desc (double-type/doc/.key-def-desc single-key-def))
+         (double-key-def-desc (double-type/doc/.key-def-desc double-key-def))
+         (single-keymap-desc (and (keymapp single-key-def)
+                                  (double-type/doc/.keymap-desc single-key-def)))
+         (double-keymap-desc (and (keymapp double-key-def)
+                                  (double-type/doc/.keymap-desc double-key-def)))
+         (doc-string (format (concat
+                              "Dispatcher created by `double-type/define-key'.\n\n"
+                              "On-Single-Type: %s%s\n"
+                              "\nOn-Double-Type: %s%s")
+                             single-key-def-desc (if single-keymap-desc
+                                                     (concat ":\n" single-keymap-desc)
+                                                   "")
+                             double-key-def-desc (if double-keymap-desc
+                                                     (concat ":\n" double-keymap-desc)
+                                                   ""))))
+    doc-string))
+
+;; ----------------------------------------------------------------------------
+;;  (double-type/doc/.key-def-desc key-def) => string
+;; ----------------------------------------------------------------------------
+(defun double-type/doc/.key-def-desc (key-def)
+  (cond ((null key-def) "none")
+        ((keymapp key-def)
+         (or (and (symbolp key-def) (boundp key-def)
+                  (format "bound to the keymap `%s'" key-def))
+             (and (double-type/doc/.find-keymap-var-name key-def)
+                  (format "bound to the keymap `%s'"
+                          (double-type/doc/.find-keymap-var-name key-def)))
+             "bound to an unnamed keymap"))
+        ((symbolp key-def) (format "`%s' "(symbol-name key-def)))
+        ((vectorp key-def) "keyboard macro")
+        ((stringp key-def) "keyboard macro")
+        ((functionp key-def) "function")
+        (t (format "%S" key-def))))
+
+;; ----------------------------------------------------------------------------
+;;  (double-type/doc/.keymap-desc keymap) => string
+;; ----------------------------------------------------------------------------
+(defun double-type/doc/.keymap-desc (keymap)
+  (with-temp-buffer
+    (map-keymap
+     (lambda (ev key-def)
+       (let* ((vec (vector ev))
+              (key-desc (condition-case _
+                              (key-description vec)
+                            (error (format "%S" ev))))
+              (key-def-desc (double-type/doc/.key-def-desc key-def)))
+         (insert (format "  %s -> %s\n" key-desc key-def-desc))))
+     keymap)
+    (buffer-string)))
+
+;; ----------------------------------------------------------------------------
+;;  (double-type/doc/.find-keymap-var-name keymap) => string
+;; ----------------------------------------------------------------------------
+(defun double-type/doc/.find-keymap-var-name (keymap)
+  (let (keymap-var-name-lst)
+    (mapatoms (lambda (sym)
+                (when (and (boundp sym)
+                           (eq (symbol-value sym) keymap))
+                  (setq keymap-var-name-lst (cons sym keymap-var-name-lst)))))
+    ;; Pick up first one.
+    (car keymap-var-name-lst)))
 
 ;;; double-type.el ends here
