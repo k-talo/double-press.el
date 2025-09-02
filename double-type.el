@@ -389,20 +389,29 @@ when it is a prefix key."
   ;; Provide a docstring so `describe-key` can show single/double bindings.
   (let* ((single-key-def-desc (double-type/doc/.key-def-desc single-key-def))
          (double-key-def-desc (double-type/doc/.key-def-desc double-key-def))
-         (single-keymap-desc (and (keymapp single-key-def)
-                                  (double-type/doc/.keymap-desc single-key-def)))
-         (double-keymap-desc (and (keymapp double-key-def)
-                                  (double-type/doc/.keymap-desc double-key-def)))
+         (single-keymap-sym (and (keymapp single-key-def)
+                                 (double-type/doc/.find-keymap-var-name single-key-def)))
+         (double-keymap-sym (and (keymapp double-key-def)
+                                 (double-type/doc/.find-keymap-var-name double-key-def)))
+         (single-keymap-desc (cond
+                              (single-keymap-sym
+                               (format ":\n\\{%s}" single-keymap-sym))
+                              ((keymapp single-key-def)
+                               (concat "\n" (double-type/doc/.keymap-desc single-key-def)))
+                              (t "")))
+         (double-keymap-desc (cond
+                              (double-keymap-sym
+                               (format ":\n\\{%s}" double-keymap-sym))
+                              ((keymapp double-key-def)
+                               (concat "\n" (double-type/doc/.keymap-desc double-key-def)))
+                              (t "")))
          (doc-string (format (concat
-                              "Dispatcher created by `double-type/define-key'.\n\n"
-                              "On-Single-Type: %s%s\n"
-                              "\nOn-Double-Type: %s%s")
-                             single-key-def-desc (if single-keymap-desc
-                                                     (concat ":\n" single-keymap-desc)
-                                                   "")
-                             double-key-def-desc (if double-keymap-desc
-                                                     (concat ":\n" double-keymap-desc)
-                                                   ""))))
+                              "A double-type event dispatcher created by `double-type/define-key'.\n"
+                              "Dispatches by timing: single on one press; double on two quick presses.\n\n"
+                              "[On Single Press]: %s%s\n"
+                              "\n[On Double Press]: %s%s")
+                             single-key-def-desc single-keymap-desc
+                             double-key-def-desc double-keymap-desc)))
     doc-string))
 
 ;; ----------------------------------------------------------------------------
@@ -417,10 +426,10 @@ when it is a prefix key."
                   (format "bound to the keymap `%s'"
                           (double-type/doc/.find-keymap-var-name key-def)))
              "bound to an unnamed keymap"))
-        ((symbolp key-def) (format "`%s' "(symbol-name key-def)))
-        ((vectorp key-def) "keyboard macro")
-        ((stringp key-def) "keyboard macro")
-        ((functionp key-def) "function")
+        ((symbolp key-def) (format "bound to `%s'" (symbol-name key-def)))
+        ((vectorp key-def) (format "bound to a keyboard macro:def\n[%s]" (format-kbd-macro key-def)))
+        ((stringp key-def) (format "bound to a keyboard macro:\n\"%s\"" key-def))
+        ((functionp key-def) (format "bound to a function:\n%s" key-def))
         (t (format "%S" key-def))))
 
 ;; ----------------------------------------------------------------------------
