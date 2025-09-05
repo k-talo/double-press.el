@@ -297,13 +297,12 @@ EV-DATA will be used to handle a key event."
 ;;  (double-type/.do-key &key ev-keys ev-kind ev-data) => VOID
 ;; ----------------------------------------------------------------------------
 (cl-defun double-type/.do-key (&key ev-keys ev-kind ev-data)
-  "Run a thing bound to current key event."
+  "Run the action bound to the current key event."
   ;; FIXME: Write codes which handles `indirect entry'.
   (let ((binding  (cadr (memq ev-kind ev-data)))
-        (key-desc (format "%s%s%s"
-                          (if (eq ev-kind :double-type) "<double-" "")
-                          (key-description ev-keys)
-                          (if (eq ev-kind :double-type) ">" ""))))
+        (key-desc (format "%s%s"
+                          (if (eq ev-kind :double-type) "<double>-" "")
+                          (key-description ev-keys))))
     ;; When binding is a function, get `symbol-function'
     ;; of a binding.
     (setq binding
@@ -356,24 +355,74 @@ EV-DATA will be used to handle a key event."
 ;;  (double-type/.do-key/aux/read-with-prefix-key binding key-desc) => OBJECT
 ;; ----------------------------------------------------------------------------
 (defun double-type/.do-key/aux/read-with-prefix-key (binding key-desc)
-  "Read key then returns binding of the key in BINDING
-when it is a prefix key."
+  "Read a key and return the binding for that key in BINDING
+when BINDING is a prefix key. Handles help events explicitly."
   (when (keymapp binding)
     (let* ((global-map nil)
            (overriding-local-map binding)
-           (key (read-key-sequence
-                 (cond (double-type/use-prompt
-                        (format "[double-type] %s-"
-                                key-desc))
-                       (t nil))))
-           (key-def (and key
-                         (lookup-key binding key))))
-      (when (not key-def)
-        (error (format "%s %s is undefined"
-                       key-desc
-                       (key-description key))))
-      (setq binding key-def)))
+           (prompt (and double-type/use-prompt
+                        (let ((prompt (format "%s-" key-desc)))
+                          (if (fboundp 'help--append-keystrokes-help)
+                              (help--append-keystrokes-help prompt)
+                            prompt))))
+           key key-def)
+      (while (and
+              (not key-def)
+              ;; Use `read-key' to capture single events so help events
+              ;; (e.g., <f1>, C-h) can be handled explicitly here.
+              (setq key (read-key prompt))
+              (cond ((double-type/.help-key-p key)
+                     ;; On a help key, display help then exit.
+                     (double-type/.display-help binding key-desc)
+                     (setq binding nil))
+                    ;; Otherwise, continue.
+                    (t t)))
+        (setq key (if (vectorp key) key (vector key)))
+        (setq key-def (and key (lookup-key binding key)))
+        (when (not key-def)
+          (error (format "%s %s is undefined"
+                         key-desc
+                         (key-description key))))
+        (setq binding key-def))))
   binding)
+
+;; ----------------------------------------------------------------------------
+;;  (double-type/.help-key-p key) => boolean
+;; ----------------------------------------------------------------------------
+(defun double-type/.help-key-p (key)
+  "Return non-nil if KEY is a help request per `help-event-list'.
+If an element of `help-event-list' is the symbol `help', compare KEY with
+the value of `help-char'."
+  (let ((needle (if (eq key 'help) help-char key))
+        (found nil))
+    (dolist (h help-event-list)
+      (let ((hv (if (eq h 'help) help-char h)))
+        (when (eq needle hv)
+          (setq found t)
+          (cl-return))))
+    found))
+
+;; ----------------------------------------------------------------------------
+;;  (double-type/.display-help keymap key-desc) => VOID
+;; ----------------------------------------------------------------------------
+(defun double-type/.display-help (keymap key-desc)
+  "Show help for KEYMAP. Uses `describe-keymap' when available."
+  (let ((help-header (format "Bindings in %s:\n\n" key-desc)))
+    (cond
+     ;; When `describe-keymap' is available
+     ((fboundp 'describe-keymap)
+      (funcall 'describe-keymap keymap)
+      (save-excursion
+        (with-current-buffer "*Help*"
+          (let ((buffer-read-only nil))
+            (goto-char 0)
+            (insert help-header)))))
+     ;; Fallback: generate the help buffer ourselves.
+     (t
+      (with-help-window (help-buffer)
+        (princ help-header)
+        (princ (double-type/doc/.keymap-desc keymap)))))))
+
 
 
 ;;; ===========================================================================
@@ -427,7 +476,7 @@ when it is a prefix key."
                           (double-type/doc/.find-keymap-var-name key-def)))
              "bound to an unnamed keymap"))
         ((symbolp key-def) (format "bound to `%s'" (symbol-name key-def)))
-        ((vectorp key-def) (format "bound to a keyboard macro:def\n[%s]" (format-kbd-macro key-def)))
+        ((vectorp key-def) (format "bound to a keyboard macro:\n[%s]" (format-kbd-macro key-def)))
         ((stringp key-def) (format "bound to a keyboard macro:\n\"%s\"" key-def))
         ((functionp key-def) (format "bound to a function:\n%s" key-def))
         (t (format "%S" key-def))))
