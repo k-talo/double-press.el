@@ -31,15 +31,15 @@
   (let ((double-type/use-prompt nil)
         (km (make-sparse-keymap)))
     (define-key km (kbd "x") 'next-line)
-    (cl-letf (((symbol-function 'read-key-sequence)
-               (lambda (&optional _prompt) (kbd "x"))))
+    (cl-letf (((symbol-function 'read-key)
+               (lambda (&optional _prompt) ?x)))
       (should (eq (double-type/.do-key/aux/read-with-prefix-key km "K") 'next-line)))))
 
 (ert-deftest double-type/read-with-prefix-key-undefined-errors ()
   (let ((double-type/use-prompt nil)
         (km (make-sparse-keymap)))
-    (cl-letf (((symbol-function 'read-key-sequence)
-               (lambda (&optional _prompt) (kbd "x"))))
+    (cl-letf (((symbol-function 'read-key)
+               (lambda (&optional _prompt) ?x)))
       (should-error (double-type/.do-key/aux/read-with-prefix-key km "K")
                     :type 'error))))
 
@@ -69,8 +69,8 @@
         (km (make-sparse-keymap)))
     (fset 'dt-test-cmd (lambda () (interactive) (setq flag :prefix)))
     (define-key km (kbd "x") 'dt-test-cmd)
-    (cl-letf (((symbol-function 'read-key-sequence)
-               (lambda (&optional _prompt) (kbd "x"))))
+    (cl-letf (((symbol-function 'read-key)
+               (lambda (&optional _prompt) ?x)))
       (double-type/.do-key :ev-keys (kbd "M-x")
                            :ev-kind :double-type
                            :ev-data (list :single-type nil
@@ -138,12 +138,14 @@
          (km (make-sparse-keymap))
          (seen-prompt nil))
     (define-key km (kbd "x") 'ignore)
-    (cl-letf (((symbol-function 'read-key-sequence)
+    (cl-letf (((symbol-function 'help--append-keystrokes-help)
+               (lambda (p) p))
+              ((symbol-function 'read-key)
                (lambda (&optional prompt)
                  (setq seen-prompt prompt)
-                 (kbd "x"))))
+                 ?x)))
       (let ((res (double-type/.do-key/aux/read-with-prefix-key km "K")))
-        (should (equal seen-prompt "[double-type] K-"))
+        (should (equal seen-prompt "K-"))
         (should (eq res 'ignore))))))
 
 ;;; unknown binding type errors
