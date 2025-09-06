@@ -7,6 +7,7 @@
 ;; Keywords: abbrev convenience emulations wp
 ;; GitHub: http://github.com/k-talo/double-press.el
 ;; Version: 1.0.0
+;; Package-Requires: ((emacs "26.1"))
 
 ;; This file is not part of GNU Emacs.
 
@@ -23,12 +24,9 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-;;; NOTE
-;;
-;; This library is just tested on Emacs 23.2.1 on Mac OS X 10.6.5,
-;; and won't be run with any version of XEmacs.
-
 ;;; Commentary:
+;;
+;; Tested on Emacs 26-30.
 ;;
 ;; Overview
 ;; ========
@@ -402,17 +400,8 @@ when BINDING is a prefix key. Handles help events explicitly."
 ;;  (double-press/.help-key-p key) => boolean
 ;; ----------------------------------------------------------------------------
 (defun double-press/.help-key-p (key)
-  "Return non-nil if KEY is a help request per `help-event-list'.
-If an element of `help-event-list' is the symbol `help', compare KEY with
-the value of `help-char'."
-  (let ((needle (if (eq key 'help) help-char key))
-        (found nil))
-    (dolist (h help-event-list)
-      (let ((hv (if (eq h 'help) help-char h)))
-        (when (eq needle hv)
-          (setq found t)
-          (cl-return))))
-    found))
+  "Return non-nil if KEY is a help request per `help-event-list'."
+  (memq key (cons help-char help-event-list)))
 
 ;; ----------------------------------------------------------------------------
 ;;  (double-press/.display-help keymap key-desc) => VOID
