@@ -1,10 +1,10 @@
-# double-type.el
+# double-press.el
 
 Provides a keyboard operation method corresponding to a mouse double-click, extending Emacs's keybinding capabilities.
 
 ## Core Concept
 
-`double-type.el` offers a simple and powerful feature: it allows you to assign two different commands to the **same key**, distinguishing between a single press and a quick double-press (a "double type").
+`double-press.el` offers a simple and powerful feature: it allows you to assign two different commands to the **same key**, distinguishing between a single press and a quick double-press (a "double press").
 
 This enables you to bind two related actions to a single, easy-to-press key, reducing the need for modifier keys like `Ctrl` or `Alt` and creating a more intuitive and efficient workflow.
 
@@ -16,21 +16,21 @@ This enables you to bind two related actions to a single, easy-to-press key, red
 
 ## Installation
 
-1.  Place `double-type.el` in a directory included in your `load-path`.
+1.  Place `double-press.el` in a directory included in your `load-path`.
 2.  Add the following line to your `init.el` or `.emacs` file:
 
 ```emacs-lisp
-(require 'double-type)
+(require 'double-press)
 ```
 
 ## Basic Usage
 
-Use the `double-type/define-key` function to define your keybindings.
+Use the `double-press/define-key` function to define your keybindings.
 
 ```emacs-lisp
-(double-type/define-key keymap key
-                        :on-single-type command-for-single-press
-                        :on-double-type command-for-double-press)
+(double-press/define-key keymap key
+                         :on-single-press command-for-single-press
+                         :on-double-press command-for-double-press)
 ```
 
 ---
@@ -39,11 +39,11 @@ Use the `double-type/define-key` function to define your keybindings.
 
 The utility of this library depends heavily on choosing the right keys to bind.
 
-When a key is defined with `double-type`, Emacs must briefly wait after the first press to see if a second one is coming. Because of this brief, built-in delay, **I strongly recommend *not* assigning `double-type` to keys that are often typed in rapid succession.**
+When a key is defined with `double-press`, Emacs must briefly wait after the first press to see if a second one is coming. Because of this brief, built-in delay, **I strongly recommend *not* assigning `double-press` to keys that are often pressed in rapid succession.**
 
 For example, binding this to letters, numbers, or common movement keys like `C-f` and `C-b` will likely feel sluggish and annoying.
 
-Instead, `double-type.el` is most effective when used with keys that are typically pressed in isolation, especially those combined with modifier keys like `Ctrl` or `Alt`.
+Instead, `double-press.el` is most effective when used with keys that are typically pressed in isolation, especially those combined with modifier keys like `Ctrl` or `Alt`.
 
 ---
 
@@ -59,9 +59,9 @@ Combine the essential programming actions of jumping to a definition and returni
 - **Double-press**: Pop back from the jump (`xref-pop-marker-stack`).
 
 ```emacs-lisp
-(double-type/define-key global-map (kbd "M-.")
-                        :on-single-type 'xref-find-definitions
-                        :on-double-type 'xref-pop-marker-stack)
+(double-press/define-key global-map (kbd "M-.")
+                         :on-single-press 'xref-find-definitions
+                         :on-double-press 'xref-pop-marker-stack)
 ```
 
 ### 2. Create a Window-Management Prefix Key (`M-w`)
@@ -80,9 +80,9 @@ Retain the original function of `M-w` (copy) by turning the double-press into a 
 (define-key my-window-map (kbd "1") 'delete-other-windows)
 
 ;; 2. Assign the keymap to the double-press of M-w
-(double-type/define-key global-map (kbd "M-w")
-                        :on-single-type 'copy-region-as-kill
-                        :on-double-type 'my-window-map)
+(double-press/define-key global-map (kbd "M-w")
+                         :on-single-press 'copy-region-as-kill
+                         :on-double-press 'my-window-map)
 ```
 Now you can use sequences like `M-w M-w s` to split a window or `M-w M-w 0` to close one.
 
@@ -94,9 +94,9 @@ Enhance your daily Git workflow with Magit. A function key like `<f8>` is a grea
 - **Double-press**: Initiate a commit (`magit-commit`).
 
 ```emacs-lisp
-(double-type/define-key global-map (kbd "<f8>")
-                        :on-single-type 'magit-status
-                        :on-double-type 'magit-commit)
+(double-press/define-key global-map (kbd "<f8>")
+                         :on-single-press 'magit-status
+                         :on-double-press 'magit-commit)
 ```
 
 ### 4. Escalate Query Replace (`M-%`)
@@ -107,9 +107,9 @@ Unify the query-replace commands, escalating from a standard replace to a more p
 - **Double-press**: Regex query-replace (`query-replace-regexp`).
 
 ```emacs-lisp
-(double-type/define-key global-map (kbd "M-%")
-                        :on-single-type 'query-replace
-                        :on-double-type 'query-replace-regexp)
+(double-press/define-key global-map (kbd "M-%")
+                         :on-single-press 'query-replace
+                         :on-double-press 'query-replace-regexp)
 ```
 
 ### 5. Centering and Display Prefix Key (`C-l`)
@@ -129,41 +129,41 @@ Keep the convenient recentering function of `C-l` while using its double-press t
 (define-key my-display-map (kbd "f") 'toggle-frame-fullscreen)
 
 ;; 2. Assign the keymap to the double-press of C-l
-(double-type/define-key global-map (kbd "C-l")
-                        :on-single-type 'recenter-top-bottom
-                        :on-double-type 'my-display-map)
+(double-press/define-key global-map (kbd "C-l")
+                         :on-single-press 'recenter-top-bottom
+                         :on-double-press 'my-display-map)
 ```
 
 ## Configuration
 
-The timeout for detecting a double-press can be customized by setting the `double-type/timeout` variable (default is 0.4 seconds).
+The timeout for detecting a double-press can be customized by setting the `double-press/timeout` variable (default is 0.4 seconds).
 
 ```emacs-lisp
-(setq double-type/timeout 0.3) ;; Set to 0.3 seconds
+(setq double-press/timeout 0.3) ;; Set to 0.3 seconds
 ```
 
 ## Development: Compile & Test
 
 - Byte-compile:
   - Makefile: `make compile`
-  - Direct: `emacs -Q --batch -L . -f batch-byte-compile double-type.el`
+  - Direct: `emacs -Q --batch -L . -f batch-byte-compile double-press.el`
 
 - Run tests (ERT):
   - Makefile: `make test`
-  - Direct: `emacs -Q --batch -L . -l double-type.el -l test-double-type.el -f ert-run-tests-batch-and-exit`
+  - Direct: `emacs -Q --batch -L . -l double-press.el -l test-double-press.el -f ert-run-tests-batch-and-exit`
 
 - macOS custom Emacs path example:
   - `make test EMACS="/Applications/Emacs.app/Contents/MacOS/Emacs"`
-  - Direct: `"/Applications/Emacs.app/Contents/MacOS/Emacs" -Q --batch -L . -l double-type.el -l test-double-type.el -f ert-run-tests-batch-and-exit`
+  - Direct: `"/Applications/Emacs.app/Contents/MacOS/Emacs" -Q --batch -L . -l double-press.el -l test-double-press.el -f ert-run-tests-batch-and-exit`
 
 - Temporary directory note (batch test on restricted environments):
-  - `mkdir -p .tmp && TMPDIR=$PWD/.tmp emacs -Q --batch -L . -l double-type.el -l test-double-type.el -f ert-run-tests-batch-and-exit`
+  - `mkdir -p .tmp && TMPDIR=$PWD/.tmp emacs -Q --batch -L . -l double-press.el -l test-double-press.el -f ert-run-tests-batch-and-exit`
 
 ## Known Bugs
 
-- Editing keyboard macros that include double-type key sequences with `kmacro-step-edit-macro` (`C-x C-k SPC`) may corrupt the macro contents.
+- Editing keyboard macros that include double-press key sequences with `kmacro-step-edit-macro` (`C-x C-k SPC`) may corrupt the macro contents.
   - Workaround: Use `edit-kbd-macro` (`C-x C-k e`) to edit, and finish with `C-c C-c`.
-  - This limitation applies only when the macro contains double-type sequences; ordinary macros are unaffected.
+  - This limitation applies only when the macro contains double-press sequences; ordinary macros are unaffected.
 
 ## License
 

@@ -1,7 +1,7 @@
 EMACS ?= emacs
 EMACSFLAGS ?= -Q --batch -L .
 
-EL  := double-type.el
+EL  := double-press.el
 ELC := $(EL:.el=.elc)
 TESTS := $(wildcard test-*.el)
 TMPDIR := .tmp

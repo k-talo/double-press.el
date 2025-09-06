@@ -6,21 +6,21 @@
   (setf (symbol-function 'a) 'b)
   
   (symbol-function 'a)
-  (etm/eq (double-type/expand-symbol-function 'a nil)
+  (etm/eq (double-press/.do-key/aux/expand-symbol-function 'a nil)
           (symbol-function 'c)))
 
 (flet ((a () 'aa)
        (b () 'bb))
   (setf (symbol-function 'b) 'a)
   (setf (symbol-function 'a) 'b)
-  (etm/signals-ok (double-type/expand-symbol-function 'a nil)
+  (etm/signals-ok (double-press/.do-key/aux/expand-symbol-function 'a nil)
                   '(error "Loop in binding of nil.")))
 
-;; (double-type/define-key esc-map "q"
+;; (double-press/define-key esc-map "q"
 ;;                         :on-single-type (lambda () (interactive) (message "%s Single1" (mydate)))
 ;;                         :on-double-type (lambda () (interactive) (message "%s Double1" (mydate))))
 
-;; (double-type/define-key esc-map "."
+;; (double-press/define-key esc-map "."
 ;;                         :on-single-type (lambda () (interactive) (message "%s Single2" (mydate)))
 ;;                         :on-double-type (lambda () (interactive) (message "%s Double2" (mydate))))
 
@@ -32,6 +32,6 @@
   (interactive "p")
   (message "ARGS: %s, PREFIX: %S, CMD: %s" args prefix-arg this-command))
 
-(double-type/define-key esc-map  "q"
-                        :on-single-type '.test-fn
-                        :on-double-type '.test-fn)
+(double-press/define-key esc-map  "q"
+                        :on-single-press '.test-fn
+                        :on-double-press '.test-fn)
