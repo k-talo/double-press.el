@@ -43,6 +43,15 @@ Tip: When a double‑press leads to a prefix keymap, you can press `C-h`
 or `<f1>` at the prompt to see the keymap’s help. On newer Emacs,
 this uses `describe-keymap` and shows a short header with the bound key.
 
+## How Double‑Press Works
+
+- Single key: quickly press the same key twice within the time window.
+  - Example: press `<f8>` twice quickly → `<double> <f8>`.
+- With modifiers: hold the modifier(s) (e.g., `Meta`/`Ctrl`/`Alt`/`Super`) and quickly press the non‑modifier key twice.
+  - Example: hold `Meta` and press `.` twice quickly → `<double> M-.`.
+- Do not double‑tap the modifier itself; keep it held while double‑pressing the target key.
+- The timeout (maximum interval between the two presses) is controlled by `double-press/timeout`.
+
 ---
 
 ## A Crucial Note on Key Selection
