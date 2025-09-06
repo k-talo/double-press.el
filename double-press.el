@@ -161,11 +161,14 @@ bound to a key by `double-press/define-key'."
 
 ;; ----------------------------------------------------------------------------
 ;;  (double-press/define-key keymap key &key on-single-press on-double-press)
-;;                                                                     => VOID
+;;                            => DISPATCHER FUNCTION (as an uninterned symbol)
 ;; ----------------------------------------------------------------------------
 (defun double-press/define-key (keymap key &rest options)
-  "In KEYMAP, define key sequence KEY as ON-SINGLE-PRESS and
-ON-DOUBLE-PRESS.
+  "In KEYMAP, define KEY for ON-SINGLE-PRESS and ON-DOUBLE-PRESS.
+
+Returns the dispatcher function (as an uninterned symbol) that is bound
+to KEY in KEYMAP. The dispatcher is a command that detects single vs.
+double press timing and invokes the appropriate binding.
 
 KEY is a string or a vector of symbols and characters meaning a
 sequence of keystrokes and events.  Non-ASCII characters with codes
@@ -173,8 +176,8 @@ above 127 (such as ISO Latin-1) can be included if you use a vector.
 Using [t] for KEY creates a default definition, which applies to any
 event type that has no other definition in this keymap.
 
-ON-SINGLE-PRESS ON-DOUBLE-PRESS are anything that can be a
-key's definition:
+ON-SINGLE-PRESS and ON-DOUBLE-PRESS are anything that can be a key's
+definition:
 
  nil (means key is undefined in this keymap),
  a command (a Lisp function suitable for interactive calling),
@@ -184,19 +187,22 @@ key's definition:
     function definition, which should at that time be one of the above,
     or another symbol whose function definition is used, etc.).
 
+This also updates [single] and [double] hint submaps so tools like
+`where-is' can show both single-press and double-press bindings.
+
 See also `define-key'."
   (let* ((on-single-press (plist-get options :on-single-press))
          (on-double-press (plist-get options :on-double-press))
-         (fn-name (gensym "double-press/dispatcher-"))
+         (dispatcher (gensym "double-press/dispatcher-"))
          (single-map (or (lookup-key keymap [single])
                          (define-key keymap [single] (make-sparse-keymap))))
          (double-map (or (lookup-key keymap [double])
                          (define-key keymap [double] (make-sparse-keymap))))
          (doc-string (double-press/doc/.dispatcher-desc on-single-press on-double-press)))
-    (put fn-name 'double-press/dispatcher-p t)
+    (put dispatcher 'double-press/dispatcher-p t)
     
     ;; Bind a closure, which handles event by the KEY, to a KEY.
-    (setf (symbol-function fn-name)
+    (setf (symbol-function dispatcher)
           (cond
            ;; Emacs =< 23 (non lexical-binding, use lexical-let)
            ((< emacs-major-version 24)
@@ -216,13 +222,19 @@ See also `define-key'."
                 (funcall 'double-press/.track-event
                          (list :single-press on-single-press
                                :double-press on-double-press)))))))
+    
     ;; Attach docstring to the dispatcher symbol for `describe-key`.
-    (put fn-name 'function-documentation doc-string)
+    (put dispatcher 'function-documentation doc-string)
+    
+    ;; advice for define-key clear hints for `where-is', so
+    ;; call it before giving hints for `where-is'.
+    (define-key keymap key dispatcher)
+
     ;; Hints for `where-is'.
     (define-key single-map key on-single-press)
     (define-key double-map key on-double-press)
-    
-    (define-key keymap key fn-name)))
+
+    dispatcher))
 
 
 ;;; ===========================================================================
