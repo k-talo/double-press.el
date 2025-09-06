@@ -156,4 +156,136 @@
                                                      :double-press nil))
                 :type 'error))
 
+;;; dispatcher end-to-end with timeout behavior
+
+(ert-deftest double-press/dispatcher-single-press-on-timeout ()
+  (let* ((double-press/timeout 0.01)
+         (flag nil)
+         (km (make-sparse-keymap))
+         (key (kbd "x")))
+    (fset 'dp-single (lambda () (interactive) (setq flag :single)))
+    (fset 'dp-double (lambda () (interactive) (setq flag :double)))
+    (double-press/define-key km key
+                             :on-single-press 'dp-single
+                             :on-double-press 'dp-double)
+    (let ((dispatcher (lookup-key km key)))
+      (cl-letf (((symbol-function 'this-command-keys-vector)
+                 (lambda () key))
+                ((symbol-function 'read-key-sequence-vector)
+                 (lambda (&optional _prompt)
+                   (sleep-for 0.05) ;; exceed timeout
+                   (kbd "z"))))
+        (funcall dispatcher)
+        (should (eq flag :single))))))
+
+(ert-deftest double-press/dispatcher-double-press-when-repeated-quickly ()
+  (let* ((double-press/timeout 0.2)
+         (flag nil)
+         (km (make-sparse-keymap))
+         (key (kbd "x")))
+    (fset 'dp-single (lambda () (interactive) (setq flag :single)))
+    (fset 'dp-double (lambda () (interactive) (setq flag :double)))
+    (double-press/define-key km key
+                             :on-single-press 'dp-single
+                             :on-double-press 'dp-double)
+    (let ((dispatcher (lookup-key km key)))
+      (cl-letf (((symbol-function 'this-command-keys-vector)
+                 (lambda () key))
+                ((symbol-function 'read-key-sequence-vector)
+                 (lambda (&optional _prompt)
+                   ;; immediately return the same key to simulate quick double press
+                   key)))
+        (funcall dispatcher)
+        (should (eq flag :double))))))
+
+;;; kbd-macro replay path (double-press recognition)
+
+(ert-deftest double-press/dispatcher-double-press-in-kbd-macro ()
+  (let* ((double-press/timeout 0.2)
+         (flag nil)
+         (km (make-sparse-keymap))
+         (key (kbd "x"))
+         (macro (vconcat key key [double])))
+    (fset 'dp-single (lambda () (interactive) (setq flag :single)))
+    (fset 'dp-double (lambda () (interactive) (setq flag :double)))
+    (double-press/define-key km key
+                             :on-single-press 'dp-single
+                             :on-double-press 'dp-double)
+    (let ((dispatcher (lookup-key km key)))
+      (cl-letf (((symbol-function 'this-command-keys-vector)
+                 (lambda () key))
+                ;; Ensure timeout path is not used in this branch
+                ((symbol-function 'read-key-sequence-vector)
+                 (lambda (&optional _prompt)
+                   (error "read-key-sequence-vector should not be called")))
+                ((symbol-value 'executing-kbd-macro) macro)
+                ((symbol-value 'executing-kbd-macro-index) 1))
+        (funcall dispatcher)
+        (should (eq flag :double))
+        (should (= executing-kbd-macro-index 3))))))
+
+;;; advice side-effect clearing where-is hints
+
+(ert-deftest double-press/define-key-advice-clears-on-rebind ()
+  (let* ((km (make-sparse-keymap))
+         (key (kbd "y")))
+    (double-press/define-key km key
+                             :on-single-press 'next-line
+                             :on-double-press 'other-window)
+    (let ((single-map (lookup-key km [single]))
+          (double-map (lookup-key km [double])))
+      (should (keymapp single-map))
+      (should (keymapp double-map))
+      (should (eq (lookup-key single-map key) 'next-line))
+      (should (eq (lookup-key double-map key) 'other-window))
+      ;; Rebind original key; advice should clear hints
+      (define-key km key 'self-insert-command)
+      (should (null (lookup-key single-map key)))
+      (should (null (lookup-key double-map key))))))
+
+;;; ensure hints are added on double-press/define-key
+
+(ert-deftest double-press/define-key-adds-hints ()
+  (let* ((km (make-sparse-keymap))
+         (key (kbd "z")))
+    (double-press/define-key km key
+                             :on-single-press 'forward-char
+                             :on-double-press 'backward-char)
+    (let ((single-map (lookup-key km [single]))
+          (double-map (lookup-key km [double])))
+      (should (keymapp single-map))
+      (should (keymapp double-map))
+      (should (eq (lookup-key single-map key) 'forward-char))
+      (should (eq (lookup-key double-map key) 'backward-char)))))
+
+;;; where-is hint stability across redefinitions
+
+(ert-deftest double-press/hints-stable-on-redefine-different-keys ()
+  (let* ((pm (make-sparse-keymap))
+         (pmx (make-sparse-keymap)))
+    (fset 'dp-save (lambda () (interactive)))
+    ;; Step 1: double on q is dp-save; single is a prefix map
+    (double-press/define-key pm (kbd "q")
+                             :on-single-press pmx
+                             :on-double-press 'dp-save)
+    (let ((double-map (lookup-key pm [double])))
+      (should (eq (lookup-key double-map (kbd "q")) 'dp-save)))
+    ;; Step 2: single on r is dp-save; double is a prefix map
+    (double-press/define-key pm (kbd "r")
+                             :on-single-press 'dp-save
+                             :on-double-press pmx)
+    (let ((single-map (lookup-key pm [single]))
+          (double-map (lookup-key pm [double])))
+      (should (eq (lookup-key single-map (kbd "r")) 'dp-save))
+      ;; Double map should hint the prefix map when double-press is a keymap.
+      (should (eq (lookup-key double-map (kbd "r")) pmx)))
+    ;; Step 3: switch r back so double is dp-save
+    (double-press/define-key pm (kbd "r")
+                             :on-single-press pmx
+                             :on-double-press 'dp-save)
+    (let ((single-map (lookup-key pm [single]))
+          (double-map (lookup-key pm [double])))
+      (should (eq (lookup-key single-map (kbd "r")) pmx))
+      (should (eq (lookup-key double-map (kbd "r")) 'dp-save)))))
+
 ;;; test-double-press.el ends here
