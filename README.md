@@ -23,6 +23,12 @@ This enables you to bind two related actions to a single, easy-to-press key, red
 (require 'double-press)
 ```
 
+## Compatibility
+
+- Tested on Emacs 26–30.
+- May also work on Emacs 23.1+ via built‑in compatibility fallbacks
+  (uses legacy `defadvice` and `read-key-sequence` where needed).
+
 ## Basic Usage
 
 Use the `double-press/define-key` function to define your keybindings.
@@ -32,6 +38,10 @@ Use the `double-press/define-key` function to define your keybindings.
                          :on-single-press command-for-single-press
                          :on-double-press command-for-double-press)
 ```
+
+Tip: When a double‑press leads to a prefix keymap, you can press `C-h`
+or `<f1>` at the prompt to see the keymap’s help. On newer Emacs,
+this uses `describe-keymap` and shows a short header with the bound key.
 
 ---
 
@@ -85,6 +95,10 @@ Retain the original function of `M-w` (copy) by turning the double-press into a 
                          :on-double-press 'my-window-map)
 ```
 Now you can use sequences like `M-w M-w s` to split a window or `M-w M-w 0` to close one.
+
+Discoverability: With the bindings below, `describe-key` on the same key
+will also show both the single‑press and double‑press actions, and if the
+double‑press targets a keymap, its bindings are listed as well.
 
 ### 3. Streamline Magit Workflow (`<f8>`)
 
@@ -158,6 +172,10 @@ The timeout for detecting a double-press can be customized by setting the `doubl
 
 - Temporary directory note (batch test on restricted environments):
   - `mkdir -p .tmp && TMPDIR=$PWD/.tmp emacs -Q --batch -L . -l double-press.el -l test-double-press.el -f ert-run-tests-batch-and-exit`
+
+Notes for older Emacs:
+- On Emacs 23, the library falls back to `defadvice` and a compatible
+  input reader. Obsolete warnings are suppressed for this file only.
 
 ## Known Bugs
 

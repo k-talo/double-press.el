@@ -7,7 +7,7 @@
 ;; Keywords: abbrev convenience emulations wp
 ;; GitHub: http://github.com/k-talo/double-press.el
 ;; Version: 1.0.0
-;; Package-Requires: ((emacs "26.1"))
+;; Package-Requires: ((emacs "23.1"))
 
 ;; This file is not part of GNU Emacs.
 
@@ -27,6 +27,7 @@
 ;;; Commentary:
 ;;
 ;; Tested on Emacs 26-30.
+;; It may also work on Emacs 23.1+ via the built-in compatibility fallbacks.
 ;;
 ;; Overview
 ;; ========
@@ -122,8 +123,12 @@
 
 (defconst double-press/version "1.0.0")
 
+;; Ensure `lexical-let` macro is known at compile time.
+(eval-when-compile (require 'cl))
 (eval-and-compile
-  (require 'cl-lib))
+  ;; Emacs 23 runtime compatibility: pull in `cl` only when needed.
+  (when (< emacs-major-version 24)
+    (require 'cl)))
 
 
 ;;; ===========================================================================
@@ -158,10 +163,7 @@ bound to a key by `double-press/define-key'."
 ;;  (double-press/define-key keymap key &key on-single-press on-double-press)
 ;;                                                                     => VOID
 ;; ----------------------------------------------------------------------------
-(cl-defun double-press/define-key (keymap key
-                                          &key
-                                          on-single-press
-                                          on-double-press)
+(defun double-press/define-key (keymap key &rest options)
   "In KEYMAP, define key sequence KEY as ON-SINGLE-PRESS and
 ON-DOUBLE-PRESS.
 
@@ -183,25 +185,39 @@ key's definition:
     or another symbol whose function definition is used, etc.).
 
 See also `define-key'."
-  (let ((fn-name (gensym "double-press/dispatcher-"))
-        (single-map (or (lookup-key keymap [single])
-                        (define-key keymap [single] (make-sparse-keymap))))
-        (double-map (or (lookup-key keymap [double])
-                        (define-key keymap [double] (make-sparse-keymap))))
-        (doc-string (double-press/doc/.dispatcher-desc on-single-press on-double-press)))
+  (let* ((on-single-press (plist-get options :on-single-press))
+         (on-double-press (plist-get options :on-double-press))
+         (fn-name (gensym "double-press/dispatcher-"))
+         (single-map (or (lookup-key keymap [single])
+                         (define-key keymap [single] (make-sparse-keymap))))
+         (double-map (or (lookup-key keymap [double])
+                         (define-key keymap [double] (make-sparse-keymap))))
+         (doc-string (double-press/doc/.dispatcher-desc on-single-press on-double-press)))
     (put fn-name 'double-press/dispatcher-p t)
     
     ;; Bind a closure, which handles event by the KEY, to a KEY.
     (setf (symbol-function fn-name)
-          ;; NOTE: use lexical-let in non lexical-binding environment.
-          (let ((on-single-press on-single-press)
-                (on-double-press on-double-press))
-            #'(lambda ()
-                (:documentation doc-string)
+          (cond
+           ;; Emacs =< 23 (non lexical-binding, use lexical-let)
+           ((< emacs-major-version 24)
+            (lexical-let ((on-single-press on-single-press)
+                          (on-double-press on-double-press))
+              (lambda ()
                 (interactive)
                 (funcall 'double-press/.track-event
                          (list :single-press on-single-press
                                :double-press on-double-press)))))
+           ;; Emacs > 24 (lexical-binding)
+           (t
+            (let ((on-single-press on-single-press)
+                  (on-double-press on-double-press))
+              (lambda ()
+                (interactive)
+                (funcall 'double-press/.track-event
+                         (list :single-press on-single-press
+                               :double-press on-double-press)))))))
+    ;; Attach docstring to the dispatcher symbol for `describe-key`.
+    (put fn-name 'function-documentation doc-string)
     ;; Hints for `where-is'.
     (define-key single-map key on-single-press)
     (define-key double-map key on-double-press)
@@ -225,7 +241,16 @@ See also `define-key'."
         ;; Clear hints for `where-is'.
         (and (keymapp single-map) (define-key single-map key nil))
         (and (keymapp double-map) (define-key double-map key nil))))))
-(advice-add 'define-key :before #'double-press/.define-key-advice)
+
+(if (fboundp 'advice-add)
+    (advice-add 'define-key :before #'double-press/.define-key-advice)
+  (progn
+    ;; Emacs 23 fallback: use legacy defadvice
+    (eval-and-compile (require 'advice))
+    (defadvice define-key (before double-press/clear-hints-legacy (keymap key def &optional remove))
+      (double-press/.define-key-advice keymap key def remove))
+    (ad-activate 'define-key)))
+
 
 
 ;;; ===========================================================================
@@ -306,13 +331,16 @@ EV-DATA will be used to handle a key event."
 ;; ----------------------------------------------------------------------------
 ;;  (double-press/.do-key &key ev-keys ev-kind ev-data) => VOID
 ;; ----------------------------------------------------------------------------
-(cl-defun double-press/.do-key (&key ev-keys ev-kind ev-data)
+(defun double-press/.do-key (&rest options)
   "Run the action bound to the current key event."
-  ;; FIXME: Write codes which handles `indirect entry'.
-  (let ((binding  (cadr (memq ev-kind ev-data)))
-        (key-desc (format "%s%s"
-                          (if (eq ev-kind :double-press) "<double>-" "")
-                          (key-description ev-keys))))
+  (let* ((ev-keys (plist-get options :ev-keys))
+         (ev-kind (plist-get options :ev-kind))
+         (ev-data (plist-get options :ev-data))
+         ;; FIXME: Write codes which handles `indirect entry'.
+         (binding  (cadr (memq ev-kind ev-data)))
+         (key-desc (format "%s%s"
+                           (if (eq ev-kind :double-press) "<double>-" "")
+                           (key-description ev-keys))))
     ;; When binding is a function, get `symbol-function'
     ;; of a binding.
     (setq binding
@@ -357,7 +385,8 @@ EV-DATA will be used to handle a key event."
                          binding)))
       (when (memq binding seen)
         (error "Loop in binding of %s." key-desc))
-      (cl-pushnew binding seen)
+      (unless (memq binding seen)
+        (push binding seen))
       (setq binding (symbol-function binding)))
     binding))
 
@@ -378,9 +407,8 @@ when BINDING is a prefix key. Handles help events explicitly."
            key key-def)
       (while (and
               (not key-def)
-              ;; Use `read-key' to capture single events so help events
-              ;; (e.g., <f1>, C-h) can be handled explicitly here.
-              (setq key (read-key prompt))
+              ;; Use a compat reader so help events can be handled explicitly here.
+              (setq key (double-press/.read-one-event prompt))
               (cond ((double-press/.help-key-p key)
                      ;; On a help key, display help then exit.
                      (double-press/.display-help binding key-desc)
@@ -395,6 +423,16 @@ when BINDING is a prefix key. Handles help events explicitly."
                          (key-description key))))
         (setq binding key-def))))
   binding)
+
+;; ----------------------------------------------------------------------------
+;;  (double-press/.read-one-event prompt) => event
+;; ----------------------------------------------------------------------------
+(defun double-press/.read-one-event (prompt)
+  "Read one input event with PROMPT, compatible down to Emacs 23."
+  (if (fboundp 'read-key)
+      (read-key prompt)
+    ;; FIXME: Not tested yet this one.
+    (aref (read-key-sequence prompt) 0)))
 
 ;; ----------------------------------------------------------------------------
 ;;  (double-press/.help-key-p key) => boolean
@@ -502,12 +540,37 @@ when BINDING is a prefix key. Handles help events explicitly."
 ;;  (double-press/doc/.find-keymap-var-name keymap) => string
 ;; ----------------------------------------------------------------------------
 (defun double-press/doc/.find-keymap-var-name (keymap)
-  (let (keymap-var-name-lst)
-    (mapatoms (lambda (sym)
-                (when (and (boundp sym)
-                           (eq (symbol-value sym) keymap))
-                  (setq keymap-var-name-lst (cons sym keymap-var-name-lst)))))
-    ;; Pick up first one.
-    (car keymap-var-name-lst)))
+  "Heuristically find a global symbol that holds KEYMAP.
+Prefers symbols that look like real keymap globals and avoids common
+let-bound locals, especially on dynamic-scope Emacs (e.g., 23)."
+  (let (candidates)
+    (mapatoms
+     (lambda (sym)
+       (when (and (boundp sym)
+                  (eq (symbol-value sym) keymap)
+                  (not (keywordp sym)))
+         (let* ((name (symbol-name sym))
+                ;; Denylist: common locals we bind in this file and
+                ;; generic names often used in dynamic scope.
+                (deny '(keymap key key-def binding prompt doc-string
+                               on-single-press on-double-press
+                               single-key-def double-key-def
+                               ev-keys ev-kind ev-data))
+                (skip (memq sym deny))
+                (score 0))
+           (unless skip
+             ;; Prefer conventional keymap variable names.
+             (when (string-match-p "-\(mode-\)?map$" name)
+               (setq score (+ score 2)))
+             ;; Prefer documented variables (global-ish).
+             (when (documentation-property sym 'variable-documentation)
+               (setq score (1+ score)))
+             (push (cons score sym) candidates))))))
+    (when candidates
+      (cdr (car (sort candidates (lambda (a b) (> (car a) (car b)))))))))
+
+;; Local Variables:
+;; byte-compile-warnings: (not obsolete)
+;; End:
 
 ;;; double-press.el ends here
