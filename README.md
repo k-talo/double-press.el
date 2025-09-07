@@ -12,7 +12,7 @@ This enables you to bind two related actions to a single, easy-to-press key, red
 
 - **Simple**: With a single, focused purpose, it's easy to configure and unlikely to conflict with other packages.
 - **Ergonomic**: Assign a common action and a related "power" version of that action to the same convenient key.
-- **Non‑modal**: Integrates with standard Emacs keys without mode switches. A common pattern is to keep the original action on single‑press and open a small, personal prefix on double‑press (discoverable with `C-h`/`<f1>`), reducing finger travel and memory load.
+- **Non-modal**: Integrates with standard Emacs keys without mode switches. A common pattern is to keep the original action on single-press and open a small, personal prefix on double-press (discoverable with `C-h`/`<f1>`), reducing finger travel and memory load.
 
 ## Installation
 
@@ -25,8 +25,8 @@ This enables you to bind two related actions to a single, easy-to-press key, red
 
 ## Compatibility
 
-- Tested on Emacs 26–30.
-- May also work on Emacs 23.1+ via built‑in compatibility fallbacks
+- Tested on Emacs 26-30.
+- May also work on Emacs 23.1+ via built-in compatibility fallbacks
   (uses legacy `defadvice` and `read-key-sequence` where needed).
 
 ## Basic Usage
@@ -39,17 +39,17 @@ Use the `double-press/define-key` function to define your keybindings.
                          :on-double-press command-for-double-press)
 ```
 
-Tip: When a double‑press leads to a prefix keymap, you can press `C-h`
-or `<f1>` at the prompt to see the keymap’s help. On newer Emacs,
+Tip: When a double-press leads to a prefix keymap, you can press `C-h`
+or `<f1>` at the prompt to see the keymap's help. On newer Emacs,
 this uses `describe-keymap` and shows a short header with the bound key.
 
-## How Double‑Press Works
+## How Double-Press Works
 
 - Single key: quickly press the same key twice within the time window.
-  - Example: press `<f8>` twice quickly → `<double> <f8>`.
-- With modifiers: hold the modifier(s) (e.g., `Meta`/`Ctrl`/`Alt`/`Super`) and quickly press the non‑modifier key twice.
-  - Example: hold `Meta` and press `.` twice quickly → `<double> M-.`.
-- Do not double‑tap the modifier itself; keep it held while double‑pressing the target key.
+  - Example: press `<f8>` twice quickly -> `<double> <f8>`.
+- With modifiers: hold the modifier(s) (e.g., `Meta`/`Ctrl`/`Alt`/`Super`) and quickly press the non-modifier key twice.
+  - Example: hold `Meta` and press `.` twice quickly -> `<double> M-.`.
+- Do not double-tap the modifier itself; keep it held while double-pressing the target key.
 - The timeout (maximum interval between the two presses) is controlled by `double-press/timeout`.
 
 ---
@@ -70,11 +70,11 @@ Instead, `double-press.el` is most effective when used with keys that are typica
 
 - Less finger travel: one comfortable key plus a short mnemonic letter.
 - Lower memory load: keep related actions under one place you remember.
-- Zero disruption: single‑press keeps the original behavior intact.
+- Zero disruption: single-press keeps the original behavior intact.
 - Discoverability: press `C-h`/`<f1>` inside the prefix to see all options.
 
-A common pattern is to keep the original action on single‑press and open a
-small, personal prefix on double‑press. For example, keep copy on `M-w`, and
+A common pattern is to keep the original action on single-press and open a
+small, personal prefix on double-press. For example, keep copy on `M-w`, and
 put window commands under `M-w M-w`.
 
 See more patterns in [More Examples](docs/EXAMPLES.md).
@@ -113,7 +113,7 @@ Unify the query-replace commands, escalating from a standard replace to a more p
 
 ### 3. Personal Prefix for Display (`C-l`)
 
-Turn a convenient key into a small prefix for display and zoom commands on double‑press:
+Turn a convenient key into a small prefix for display and zoom commands on double-press:
 
 - **Single-press**: Run standard action (`copy-region-as-kill`).
 - **Double-press**: Open personal prefix (`my-display-map`)
@@ -135,7 +135,7 @@ Turn a convenient key into a small prefix for display and zoom commands on doubl
 
 ### 4. MORE EXAMPLES
 
-See more patterns and ready‑to‑use snippets in [docs/Examples.md](docs/EXAMPLES.md).
+See more patterns and ready-to-use snippets in [docs/Examples.md](docs/EXAMPLES.md).
 
 ## Configuration
 
@@ -176,4 +176,4 @@ Notes for older Emacs:
 
 GPLv3 or later. See the [LICENSE](LICENSE) file for the full text.
 
-Copyright (c) 2010-2012, 2025 K‑talo Miyazaki
+Copyright (c) 2010-2012, 2025 K-talo Miyazaki

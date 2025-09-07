@@ -28,7 +28,7 @@
 ;;; Commentary:
 ;;
 ;; double-press.el lets you bind two actions to the same key by timing:
-;; a single press vs a quick double‑press — no mode switch required.
+;; a single press vs a quick double-press - no mode switch required.
 ;;
 ;; Quick start:
 ;;
@@ -44,7 +44,7 @@
 ;; Customization:
 ;;   - double-press/timeout    ;; maximum interval between presses (seconds)
 ;;   - double-press/use-prompt ;; show a prompt when reading from a prefix map
-;;   - Press C-h/<f1> inside a double‑press prefix to see its bindings.
+;;   - Press C-h/<f1> inside a double-press prefix to see its bindings.
 ;;
 ;; See also: README.md (overview, setup) and docs/EXAMPLES.md (snippets).
 
@@ -123,7 +123,7 @@ bound to a key by `double-press/define-key'."
 
 Returns the dispatcher (an uninterned symbol bound to an interactive
 command) installed at KEY. The dispatcher decides between the two
-bindings by timing: a single press or a quick double‑press within
+bindings by timing: a single press or a quick double-press within
 `double-press/timeout\\=' seconds.
 
 KEY may be a string or a vector of events. Using [t] as KEY creates a
@@ -137,8 +137,8 @@ ON-SINGLE-PRESS and ON-DOUBLE-PRESS accept any key definition:
   - symbol (indirect; resolved at lookup time)
 
 For better discoverability, this also updates the auxiliary [single]
-and [double] submaps so `where-is\\=' can show both single‑press and
-double‑press bindings.
+and [double] submaps so `where-is\\=' can show both single-press and
+double-press bindings.
 
 Example:
 
