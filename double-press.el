@@ -73,12 +73,16 @@
 
 (defconst double-press/version "1.0.0")
 
-;; Ensure `lexical-let` macro is known at compile time.
-(eval-when-compile (require 'cl))
 (eval-and-compile
-  ;; Emacs 23 runtime compatibility: pull in `cl` only when needed.
-  (when (< emacs-major-version 24)
-    (require 'cl)))
+  (cond
+   ((< emacs-major-version 24) ;; Emacs 23 runtime compatibility
+    (require 'cl)
+    (defalias 'double-press/defun* 'defun*))
+   (t
+    (defalias 'double-press/defun* 'cl-defun))))
+
+;; Ensure `lexical-let` macro is known at compile time, for Emacs > 24.
+(eval-when-compile (require 'cl))
 
 
 ;;; ===========================================================================
@@ -113,16 +117,14 @@ bound to a key by `double-press/define-key'."
 ;;  (double-press/define-key keymap key &key on-single-press on-double-press)
 ;;                            => DISPATCHER FUNCTION (as an uninterned symbol)
 ;; ----------------------------------------------------------------------------
-(defun double-press/define-key (keymap key &rest options)
-  (declare (advertised-calling-convention
-            (keymap key &key on-single-press on-double-press)
-            "1.0.0"))
+(double-press/defun* double-press/define-key (keymap key
+                                                     &key on-single-press on-double-press)
   "Bind KEY in KEYMAP to two actions: ON-SINGLE-PRESS and ON-DOUBLE-PRESS.
 
 Returns the dispatcher (an uninterned symbol bound to an interactive
 command) installed at KEY. The dispatcher decides between the two
 bindings by timing: a single press or a quick double‑press within
-`double-press/timeout' seconds.
+`double-press/timeout\\=' seconds.
 
 KEY may be a string or a vector of events. Using [t] as KEY creates a
 default definition used for any event not otherwise defined in KEYMAP.
@@ -131,26 +133,24 @@ ON-SINGLE-PRESS and ON-DOUBLE-PRESS accept any key definition:
   - nil (leave KEY undefined in this map)
   - command (an interactive function)
   - string or vector (treated as a keyboard macro)
-  - keymap (makes KEY a prefix; press `C-h' or `<f1>' inside to see help)
+  - keymap (makes KEY a prefix; press `C-h\\=' or `<f1>\\=' inside to see help)
   - symbol (indirect; resolved at lookup time)
 
 For better discoverability, this also updates the auxiliary [single]
-and [double] submaps so `where-is' can show both single‑press and
+and [double] submaps so `where-is\\=' can show both single‑press and
 double‑press bindings.
 
 Example:
 
-  (define-prefix-command 'my-window-map)
-  (define-key my-window-map (kbd \"s\") 'split-window-below)
+  (define-prefix-command \\='my-window-map)
+  (define-key my-window-map (kbd \"s\") \\='split-window-below)
   (double-press/define-key global-map (kbd \"M-w\")
-    :on-single-press 'copy-region-as-kill
-    :on-double-press  my-window-map)
+    :on-single-press \\='copy-region-as-kill
+    :on-double-press \\='my-window-map)
 
-See also `define-key', `double-press/timeout', and
-`double-press/use-prompt'."
-  (let* ((on-single-press (plist-get options :on-single-press))
-         (on-double-press (plist-get options :on-double-press))
-         (dispatcher (gensym "double-press/dispatcher-"))
+See also `define-key\\=', `double-press/timeout\\=', and
+`double-press/use-prompt\\='."
+  (let* ((dispatcher (gensym "double-press/dispatcher-"))
          (single-map (or (lookup-key keymap [single])
                          (define-key keymap [single] (make-sparse-keymap))))
          (double-map (or (lookup-key keymap [double])
