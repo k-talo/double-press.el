@@ -1,4 +1,5 @@
 ;;; test-double-press.el --- ERT tests for double-press.el  -*- lexical-binding: t; -*-
+;; SPDX-License-Identifier: GPL-3.0-or-later
 
 (require 'ert)
 (require 'cl-lib)

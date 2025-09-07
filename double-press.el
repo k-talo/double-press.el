@@ -1,4 +1,5 @@
 ;; double-press.el --- keyboard operation method corresponding to a mouse double-click. -*- lexical-binding: t; -*-
+;; SPDX-License-Identifier: GPL-3.0-or-later
 
 ;; Copyright (C) 2010-2012, 2025 K-talo Miyazaki, all rights reserved.
 
