@@ -27,77 +27,26 @@
 
 ;;; Commentary:
 ;;
-;; Tested on Emacs 26-30.
-;; It may also work on Emacs 23.1+ via the built-in compatibility fallbacks.
+;; double-press.el lets you bind two actions to the same key by timing:
+;; a single press vs a quick double‑press — no mode switch required.
 ;;
-;; Overview
-;; ========
-;; This library provides a keyboard operation method corresponding
-;; to a mouse double-click.
+;; Quick start:
 ;;
+;;   (require 'double-press)
+;;   ;; Keep copy on M-w; open a small window prefix on M-w M-w
+;;   (define-prefix-command 'my-window-map)
+;;   (define-key my-window-map (kbd "s") 'split-window-below)
+;;   (define-key my-window-map (kbd "v") 'split-window-right)
+;;   (double-press/define-key global-map (kbd "M-w")
+;;     :on-single-press 'copy-region-as-kill
+;;     :on-double-press 'my-window-map)
 ;;
-;; INSTALLING
-;; ==========
-;; To install this library, save this file to a directory in your
-;; `load-path' (you can view the current `load-path' using "C-h v
-;; load-path RET" within Emacs), then add the following line to your
-;; .emacs startup file:
+;; Customization:
+;;   - double-press/timeout    ;; maximum interval between presses (seconds)
+;;   - double-press/use-prompt ;; show a prompt when reading from a prefix map
+;;   - Press C-h/<f1> inside a double‑press prefix to see its bindings.
 ;;
-;;    (require 'double-press)
-;;
-;;
-;; USING
-;; =====
-;; You can bind commands to keyboard events "single-press" and
-;; "double-press" on a key via a function `double-press/define-key'
-;; which is provided by this library.
-;;
-;;   Examples)
-;;
-;;     ;; Save buffer with key <double-C-s>.
-;;     (double-press/define-key global-map "\C-s"
-;;                             :on-single-press 'isearch-forward
-;;                             :on-double-press 'save-buffer)
-;;     
-;;     ;; Other window with key <double-C-o>.
-;;     (double-press/define-key global-map "\C-o"
-;;                             :on-single-press 'open-line
-;;                             :on-double-press 'other-window)
-;;     
-;;     ;; Open RE-Builder with key <double-C-r>.
-;;     (double-press/define-key global-map "\C-r"
-;;                             :on-single-press 'isearch-backward
-;;                             :on-double-press 're-builder)
-;;     
-;;     ;; Insert current time with key <double-M-t>.
-;;     (double-press/define-key esc-map "t"
-;;                             :on-single-press 'transpose-words
-;;                             :on-double-press (lambda ()
-;;                                               (interactive)
-;;                                               (insert (current-time-string))))
-;;     
-;;     ;; Insert mail address by keyboard macro with key <double-@>.
-;;     (double-press/define-key global-map "@"
-;;                             :on-single-press 'self-insert-command
-;;                             :on-double-press "my-name@example.com")
-;;     
-;;     ;; Use <double-C-w> as prefix key `ctl-x-4-map'.
-;;     (double-press/define-key global-map "\C-w"
-;;                             :on-single-press 'kill-region
-;;                             :on-double-press ctl-x-4-map)
-;;
-;;   NOTE: You should avoid assigning the "double-press" event to keys
-;;         that are often pressed in rapid succession, such as "C-f" or
-;;         "C-b". Such assignments can feel sluggish and annoying.
-;;
-;;
-;; KNOWN PROBLEMS
-;; ==============
-;;
-;;
-;; WISH LIST
-;; =========
-;; - Show commands bound to "double-press" event by `describe-key'.
+;; See also: README.md (overview, setup) and docs/EXAMPLES.md (snippets).
 
 ;;; Change Log:
 
@@ -165,33 +114,40 @@ bound to a key by `double-press/define-key'."
 ;;                            => DISPATCHER FUNCTION (as an uninterned symbol)
 ;; ----------------------------------------------------------------------------
 (defun double-press/define-key (keymap key &rest options)
-  "In KEYMAP, define KEY for ON-SINGLE-PRESS and ON-DOUBLE-PRESS.
+  (declare (advertised-calling-convention
+            (keymap key &key on-single-press on-double-press)
+            "1.0.0"))
+  "Bind KEY in KEYMAP to two actions: ON-SINGLE-PRESS and ON-DOUBLE-PRESS.
 
-Returns the dispatcher function (as an uninterned symbol) that is bound
-to KEY in KEYMAP. The dispatcher is a command that detects single vs.
-double press timing and invokes the appropriate binding.
+Returns the dispatcher (an uninterned symbol bound to an interactive
+command) installed at KEY. The dispatcher decides between the two
+bindings by timing: a single press or a quick double‑press within
+`double-press/timeout' seconds.
 
-KEY is a string or a vector of symbols and characters meaning a
-sequence of keystrokes and events.  Non-ASCII characters with codes
-above 127 (such as ISO Latin-1) can be included if you use a vector.
-Using [t] for KEY creates a default definition, which applies to any
-event type that has no other definition in this keymap.
+KEY may be a string or a vector of events. Using [t] as KEY creates a
+default definition used for any event not otherwise defined in KEYMAP.
 
-ON-SINGLE-PRESS and ON-DOUBLE-PRESS are anything that can be a key's
-definition:
+ON-SINGLE-PRESS and ON-DOUBLE-PRESS accept any key definition:
+  - nil (leave KEY undefined in this map)
+  - command (an interactive function)
+  - string or vector (treated as a keyboard macro)
+  - keymap (makes KEY a prefix; press `C-h' or `<f1>' inside to see help)
+  - symbol (indirect; resolved at lookup time)
 
- nil (means key is undefined in this keymap),
- a command (a Lisp function suitable for interactive calling),
- a string (treated as a keyboard macro),
- a keymap (to define a prefix key),
- a symbol (when the key is looked up, the symbol will stand for its
-    function definition, which should at that time be one of the above,
-    or another symbol whose function definition is used, etc.).
+For better discoverability, this also updates the auxiliary [single]
+and [double] submaps so `where-is' can show both single‑press and
+double‑press bindings.
 
-This also updates [single] and [double] hint submaps so tools like
-`where-is' can show both single-press and double-press bindings.
+Example:
 
-See also `define-key'."
+  (define-prefix-command 'my-window-map)
+  (define-key my-window-map (kbd \"s\") 'split-window-below)
+  (double-press/define-key global-map (kbd \"M-w\")
+    :on-single-press 'copy-region-as-kill
+    :on-double-press  my-window-map)
+
+See also `define-key', `double-press/timeout', and
+`double-press/use-prompt'."
   (let* ((on-single-press (plist-get options :on-single-press))
          (on-double-press (plist-get options :on-double-press))
          (dispatcher (gensym "double-press/dispatcher-"))
