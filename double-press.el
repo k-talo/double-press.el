@@ -7,7 +7,7 @@
 ;; Created: Fri Dec 24 02:33:06 2010 JST
 ;; Keywords: abbrev convenience emulations wp
 ;; GitHub: http://github.com/k-talo/double-press.el
-;; Version: 1.0.0
+;; Version: 1.0.1
 ;; Package-Requires: ((emacs "23.1"))
 
 ;; This file is not part of GNU Emacs.
@@ -50,6 +50,12 @@
 
 ;;; Change Log:
 
+;; v1.0.1  Sun Sep  7 19:52:11 2025 JST
+;;   - Fix prefix help: honor help bindings in maps
+;;   - API: restore &key via defun* alias (Emacs 23+)
+;;   - Docs: refine README/EXAMPLES; refine help and header comments
+;;   - License/headers: add LICENSE, SPDX
+
 ;; v1.0.0   Sat Sep  6 10:25:30 2025 JST
 ;;   - Rename library to double-press; stabilize the API.
 ;;   - Switch public keywords to :on-single-press / :on-double-press.
@@ -71,7 +77,7 @@
 
 (provide 'double-press)
 
-(defconst double-press/version "1.0.0")
+(defconst double-press/version "1.0.1")
 
 (eval-and-compile
   (cond
