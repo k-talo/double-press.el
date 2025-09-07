@@ -12,7 +12,7 @@ This enables you to bind two related actions to a single, easy-to-press key, red
 
 - **Simple**: With a single, focused purpose, it's easy to configure and unlikely to conflict with other packages.
 - **Ergonomic**: Assign a common action and a related "power" version of that action to the same convenient key.
-- **Non-modal**: Integrates seamlessly into the standard Emacs interaction model without introducing the cognitive overhead of switching modes.
+- **Non‑modal**: Integrates with standard Emacs keys without mode switches. A common pattern is to keep the original action on single‑press and open a small, personal prefix on double‑press (discoverable with `C-h`/`<f1>`), reducing finger travel and memory load.
 
 ## Installation
 
@@ -60,9 +60,24 @@ The utility of this library depends heavily on choosing the right keys to bind.
 
 When a key is defined with `double-press`, Emacs must briefly wait after the first press to see if a second one is coming. Because of this brief, built-in delay, **I strongly recommend *not* assigning `double-press` to keys that are often pressed in rapid succession.**
 
-For example, binding this to letters, numbers, or common movement keys like `C-f` and `C-b` will likely feel sluggish and annoying.
+For example, binding this to letters, numbers, or common movement keys like `C-f`, `C-b`, `C-a`, `C-e`, `C-n`, and `C-p` will likely feel sluggish and annoying.
 
 Instead, `double-press.el` is most effective when used with keys that are typically pressed in isolation, especially those combined with modifier keys like `Ctrl` or `Alt`.
+
+---
+
+## Why a Personal Prefix?
+
+- Less finger travel: one comfortable key plus a short mnemonic letter.
+- Lower memory load: keep related actions under one place you remember.
+- Zero disruption: single‑press keeps the original behavior intact.
+- Discoverability: press `C-h`/`<f1>` inside the prefix to see all options.
+
+A common pattern is to keep the original action on single‑press and open a
+small, personal prefix on double‑press. For example, keep copy on `M-w`, and
+put window commands under `M-w M-w`.
+
+See more patterns in [More Examples](docs/EXAMPLES.md).
 
 ---
 
@@ -83,46 +98,7 @@ Combine the essential programming actions of jumping to a definition and returni
                          :on-double-press 'xref-pop-marker-stack)
 ```
 
-### 2. Create a Window-Management Prefix Key (`M-w`)
-
-Retain the original function of `M-w` (copy) by turning the double-press into a prefix key for a custom keymap of window-management commands.
-
-- **Single-press**: Copy region (`copy-region-as-kill`).
-- **Double-press**: A custom keymap for window commands.
-
-```emacs-lisp
-;; 1. Define a prefix keymap for window commands
-(define-prefix-command 'my-window-map)
-(define-key my-window-map (kbd "s") 'split-window-below)
-(define-key my-window-map (kbd "v") 'split-window-right)
-(define-key my-window-map (kbd "0") 'delete-window)
-(define-key my-window-map (kbd "1") 'delete-other-windows)
-
-;; 2. Assign the keymap to the double-press of M-w
-(double-press/define-key global-map (kbd "M-w")
-                         :on-single-press 'copy-region-as-kill
-                         :on-double-press 'my-window-map)
-```
-Now you can use sequences like `M-w M-w s` to split a window or `M-w M-w 0` to close one.
-
-Discoverability: With the bindings below, `describe-key` on the same key
-will also show both the single‑press and double‑press actions, and if the
-double‑press targets a keymap, its bindings are listed as well.
-
-### 3. Streamline Magit Workflow (`<f8>`)
-
-Enhance your daily Git workflow with Magit. A function key like `<f8>` is a great candidate because it's easy to press and typically unassigned.
-
-- **Single-press**: Open the Magit status window (`magit-status`).
-- **Double-press**: Initiate a commit (`magit-commit`).
-
-```emacs-lisp
-(double-press/define-key global-map (kbd "<f8>")
-                         :on-single-press 'magit-status
-                         :on-double-press 'magit-commit)
-```
-
-### 4. Escalate Query Replace (`M-%`)
+### 2. Escalate Query Replace (`M-%`)
 
 Unify the query-replace commands, escalating from a standard replace to a more powerful regex replace.
 
@@ -135,27 +111,31 @@ Unify the query-replace commands, escalating from a standard replace to a more p
                          :on-double-press 'query-replace-regexp)
 ```
 
-### 5. Centering and Display Prefix Key (`C-l`)
+### 3. Personal Prefix for Display (`C-l`)
 
-Keep the convenient recentering function of `C-l` while using its double-press to activate a custom keymap for display and buffer-related commands.
+Turn a convenient key into a small prefix for display and zoom commands on double‑press:
 
-- **Single-press**: Recenter the view (`recenter-top-bottom`).
-- **Double-press**: A custom keymap for display/buffer commands.
+- **Single-press**: Run standard action (`copy-region-as-kill`).
+- **Double-press**: Open personal prefix (`my-display-map`)
 
 ```emacs-lisp
-;; 1. Define a prefix keymap for display/buffer commands
 (define-prefix-command 'my-display-map)
-(define-key my-display-map (kbd "b") 'switch-to-buffer)
-(define-key my-display-map (kbd "k") 'kill-current-buffer)
 (define-key my-display-map (kbd "+") 'text-scale-increase)
 (define-key my-display-map (kbd "-") 'text-scale-decrease)
-(define-key my-display-map (kbd "f") 'toggle-frame-fullscreen)
+(define-key my-display-map (kbd "C-s") 'text-scale-mode)
+(define-key my-display-map (kbd "C-f") 'toggle-frame-fullscreen)
+(define-key my-display-map (kbd "C-m") 'toggle-frame-maximized)
+(define-key my-display-map (kbd "C-h") 'set-frame-height)
+(define-key my-display-map (kbd "C-w") 'set-frame-width)
 
-;; 2. Assign the keymap to the double-press of C-l
 (double-press/define-key global-map (kbd "C-l")
-                         :on-single-press 'recenter-top-bottom
-                         :on-double-press 'my-display-map)
+  :on-single-press 'recenter-top-bottom
+  :on-double-press 'my-display-map)
 ```
+
+### 4. MORE EXAMPLES
+
+See more patterns and ready‑to‑use snippets in [docs/Examples.md](docs/EXAMPLES.md).
 
 ## Configuration
 
