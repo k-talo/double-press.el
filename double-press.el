@@ -421,7 +421,11 @@ when BINDING is a prefix key. Handles help events explicitly."
               (not key-def)
               ;; Use a compat reader so help events can be handled explicitly here.
               (setq key (double-press/.read-one-event prompt))
-              (cond ((double-press/.help-key-p key)
+              (cond ((and (double-press/.help-key-p key)
+                          ;; If the key is bound in the binding,
+                          ;; that definition takes precedence.
+                          (not (lookup-key binding
+                                           (if (vectorp key) key (vector key)))))
                      ;; On a help key, display help then exit.
                      (double-press/.display-help binding key-desc)
                      (setq binding nil))
