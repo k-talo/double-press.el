@@ -25,9 +25,7 @@ This enables you to bind two related actions to a single, easy-to-press key, red
 
 ## Compatibility
 
-- Tested on Emacs 26-30.
-- May also work on Emacs 23.1+ via built-in compatibility fallbacks
-  (uses legacy `defadvice` and `read-key-sequence` where needed).
+- Supported: Emacs 24.4+ (tested on 26-30).
 
 ## Basic Usage
 
@@ -162,9 +160,7 @@ The timeout for detecting a double-press can be customized by setting the `doubl
 - Temporary directory note (batch test on restricted environments):
   - `mkdir -p .tmp && TMPDIR=$PWD/.tmp emacs -Q --batch -L . -l double-press.el -l test-double-press.el -f ert-run-tests-batch-and-exit`
 
-Notes for older Emacs:
-- On Emacs 23, the library falls back to `defadvice` and a compatible
-  input reader. Obsolete warnings are suppressed for this file only.
+ 
 
 ## Known Bugs
 

@@ -8,7 +8,7 @@
 ;; Keywords: abbrev convenience emulations wp
 ;; GitHub: http://github.com/k-talo/double-press.el
 ;; Version: 1.0.1
-;; Package-Requires: ((emacs "23.1"))
+;; Package-Requires: ((emacs "24.4"))
 
 ;; This file is not part of GNU Emacs.
 
@@ -79,16 +79,8 @@
 
 (defconst double-press/version "1.0.1")
 
-(eval-and-compile
-  (cond
-   ((< emacs-major-version 24) ;; Emacs 23 runtime compatibility
-    (require 'cl)
-    (defalias 'double-press/defun* 'defun*))
-   (t
-    (defalias 'double-press/defun* 'cl-defun))))
-
-;; Ensure `lexical-let` macro is known at compile time, for Emacs > 24.
-(eval-when-compile (require 'cl))
+;; Emacs 24.4+ baseline: use cl-lib directly.
+(require 'cl-lib)
 
 
 ;;; ===========================================================================
@@ -123,8 +115,7 @@ bound to a key by `double-press/define-key'."
 ;;  (double-press/define-key keymap key &key on-single-press on-double-press)
 ;;                            => DISPATCHER FUNCTION (as an uninterned symbol)
 ;; ----------------------------------------------------------------------------
-(double-press/defun* double-press/define-key (keymap key
-                                                     &key on-single-press on-double-press)
+(cl-defun double-press/define-key (keymap key &key on-single-press on-double-press)
   "Bind KEY in KEYMAP to two actions: ON-SINGLE-PRESS and ON-DOUBLE-PRESS.
 
 Returns the dispatcher (an uninterned symbol bound to an interactive
@@ -164,28 +155,16 @@ See also `define-key\\=', `double-press/timeout\\=', and
          (doc-string (double-press/doc/.dispatcher-desc on-single-press on-double-press)))
     (put dispatcher 'double-press/dispatcher-p t)
     
-    ;; Bind a closure, which handles event by the KEY, to a KEY.
+    ;; Bind a closure (lexical-binding) that dispatches based on timing.
     (setf (symbol-function dispatcher)
-          (cond
-           ;; Emacs =< 23 (non lexical-binding, use lexical-let)
-           ((< emacs-major-version 24)
-            (lexical-let ((on-single-press on-single-press)
-                          (on-double-press on-double-press))
-              (lambda ()
-                (interactive)
-                (funcall 'double-press/.track-event
-                         (list :single-press on-single-press
-                               :double-press on-double-press)))))
-           ;; Emacs > 24 (lexical-binding)
-           (t
-            (let ((on-single-press on-single-press)
-                  (on-double-press on-double-press))
-              (lambda ()
-                (interactive)
-                (funcall 'double-press/.track-event
-                         (list :single-press on-single-press
-                               :double-press on-double-press)))))))
-    
+          (let ((on-single-press on-single-press)
+                (on-double-press on-double-press))
+            (lambda ()
+              (interactive)
+              (funcall 'double-press/.track-event
+                       (list :single-press on-single-press
+                             :double-press on-double-press)))))
+
     ;; Attach docstring to the dispatcher symbol for `describe-key`.
     (put dispatcher 'function-documentation doc-string)
     
@@ -217,14 +196,7 @@ See also `define-key\\=', `double-press/timeout\\=', and
         (and (keymapp single-map) (define-key single-map key nil))
         (and (keymapp double-map) (define-key double-map key nil))))))
 
-(if (fboundp 'advice-add)
-    (advice-add 'define-key :before #'double-press/.define-key-advice)
-  (progn
-    ;; Emacs 23 fallback: use legacy defadvice
-    (eval-and-compile (require 'advice))
-    (defadvice define-key (before double-press/clear-hints-legacy (keymap key def &optional remove))
-      (double-press/.define-key-advice keymap key def remove))
-    (ad-activate 'define-key)))
+(advice-add 'define-key :before #'double-press/.define-key-advice)
 
 
 
@@ -547,9 +519,5 @@ let-bound locals, especially on dynamic-scope Emacs (e.g., 23)."
              (push (cons score sym) candidates))))))
     (when candidates
       (cdr (car (sort candidates (lambda (a b) (> (car a) (car b)))))))))
-
-;; Local Variables:
-;; byte-compile-warnings: (not obsolete)
-;; End:
 
 ;;; double-press.el ends here
