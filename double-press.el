@@ -7,7 +7,7 @@
 ;; Created: Fri Dec 24 02:33:06 2010 JST
 ;; Keywords: abbrev convenience emulations wp
 ;; GitHub: http://github.com/k-talo/double-press.el
-;; Version: 1.0.1
+;; Version: 2.0.0
 ;; Package-Requires: ((emacs "24.4"))
 
 ;; This file is not part of GNU Emacs.
@@ -50,6 +50,9 @@
 
 ;;; Change Log:
 
+;; v2.0.0  Mon Sep  8 10:16:00 2025 JST
+;;   - Drop Emacs 23 support; require Emacs 24.4+.
+
 ;; v1.0.1  Sun Sep  7 19:52:11 2025 JST
 ;;   - Fix prefix help: honor help bindings in maps
 ;;   - API: restore &key via defun* alias (Emacs 23+)
@@ -77,7 +80,7 @@
 
 (provide 'double-press)
 
-(defconst double-press/version "1.0.1")
+(defconst double-press/version "2.0.0")
 
 ;; Emacs 24.4+ baseline: use cl-lib directly.
 (require 'cl-lib)
