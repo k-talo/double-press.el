@@ -92,15 +92,18 @@
 ;;;
 ;;; ===========================================================================
 
+;;;###autoload
 (defgroup double-press nil
   "\"Double Press\" key event."
   :group 'convenience)
 
+;;;###autoload
 (defcustom double-press/timeout 0.4
   "Interval of a \"double press\" key event in seconds."
   :type  'float
   :group 'double-press)
 
+;;;###autoload
 (defcustom double-press/use-prompt t
   "Non-nil means show a prompt for double-press prefix keys."
   :type  'boolean
