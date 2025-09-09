@@ -1,12 +1,13 @@
-;; double-press.el --- keyboard operation method corresponding to a mouse double-click. -*- lexical-binding: t; -*-
+;;; double-press.el --- Double-press key dispatcher -*- lexical-binding: t; -*-
 ;; SPDX-License-Identifier: GPL-3.0-or-later
 
 ;; Copyright (C) 2010-2012, 2025 K-talo Miyazaki, all rights reserved.
 
 ;; Author: K-talo Miyazaki <Keitaro dot Miyazaki at gmail dot com>
 ;; Created: Fri Dec 24 02:33:06 2010 JST
-;; Keywords: abbrev convenience emulations wp
-;; GitHub: http://github.com/k-talo/double-press.el
+;; Keywords: abbrev, convenience, emulations, wp
+;; URL: https://github.com/k-talo/double-press.el
+;; Maintainer: K-talo Miyazaki <Keitaro dot Miyazaki at gmail dot com>
 ;; Version: 2.0.0
 ;; Package-Requires: ((emacs "24.4"))
 
@@ -78,9 +79,8 @@
 
 ;;; Code:
 
-(provide 'double-press)
-
-(defconst double-press/version "2.0.0")
+(defconst double-press/version "2.0.0"
+  "Version of the double-press package.")
 
 ;; Emacs 24.4+ baseline: use cl-lib directly.
 (require 'cl-lib)
@@ -102,8 +102,7 @@
   :group 'double-press)
 
 (defcustom double-press/use-prompt t
-  "Non nil to display prompt for prefix keys which are
-bound to a key by `double-press/define-key'."
+  "Non-nil means show a prompt for double-press prefix keys."
   :type  'boolean
   :group 'double-press)
 
@@ -118,6 +117,7 @@ bound to a key by `double-press/define-key'."
 ;;  (double-press/define-key keymap key &key on-single-press on-double-press)
 ;;                            => DISPATCHER FUNCTION (as an uninterned symbol)
 ;; ----------------------------------------------------------------------------
+;;;###autoload
 (cl-defun double-press/define-key (keymap key &key on-single-press on-double-press)
   "Bind KEY in KEYMAP to two actions: ON-SINGLE-PRESS and ON-DOUBLE-PRESS.
 
@@ -164,7 +164,7 @@ See also `define-key\\=', `double-press/timeout\\=', and
                 (on-double-press on-double-press))
             (lambda ()
               (interactive)
-              (funcall 'double-press/.track-event
+              (funcall #'double-press/.track-event
                        (list :single-press on-single-press
                              :double-press on-double-press)))))
 
@@ -189,7 +189,12 @@ See also `define-key\\=', `double-press/timeout\\=', and
 ;;; ===========================================================================
 
 (defun double-press/.define-key-advice (keymap key _def &optional _remove)
-  "Clear hints for `where-is'."
+  "Clear hints for `where-is' in KEYMAP for KEY.
+
+This runs as a :before advice for `define-key' and removes
+mirror entries from the [single] and [double] submaps so that
+`where-is' does not show stale bindings.  DEF and REMOVE are
+ignored."
   (let ((key-def (lookup-key keymap key)))
     (when (and (symbolp key-def)
                (get key-def 'double-press/dispatcher-p))
@@ -282,7 +287,9 @@ EV-DATA will be used to handle a key event."
 ;;  (double-press/.do-key &key ev-keys ev-kind ev-data) => VOID
 ;; ----------------------------------------------------------------------------
 (defun double-press/.do-key (&rest options)
-  "Run the action bound to the current key event."
+  "Run the action bound to the current key event.
+
+OPTIONS is a plist with keys :ev-keys, :ev-kind, and :ev-data."
   (let* ((ev-keys (plist-get options :ev-keys))
          (ev-kind (plist-get options :ev-kind))
          (ev-data (plist-get options :ev-data))
@@ -320,21 +327,23 @@ EV-DATA will be used to handle a key event."
       ;; Do nothing
       )
      (t
-      (error "Unknown binding type: \"%s\"."
-             binding)))))
+       (error "Unknown binding type: \"%s\""
+              binding)))))
 
 ;; ----------------------------------------------------------------------------
 ;;  (double-press/.do-key/aux/expand-symbol-function binding key-desc) => OBJECT
 ;; ----------------------------------------------------------------------------
 (defun double-press/.do-key/aux/expand-symbol-function (binding key-desc)
-  "Returns symbol function of BINDING if it is a symbol."
+  "Return the symbol function of BINDING if it is a symbol.
+
+KEY-DESC is the human-readable description of the triggering key."
   (let (seen)
     (while (and (not (commandp binding))
                 (symbolp binding)
                 (not (eq (symbol-function binding)
                          binding)))
       (when (memq binding seen)
-        (error "Loop in binding of %s." key-desc))
+        (error "Loop in binding of %s" key-desc))
       (unless (memq binding seen)
         (push binding seen))
       (setq binding (symbol-function binding)))
@@ -344,8 +353,10 @@ EV-DATA will be used to handle a key event."
 ;;  (double-press/.do-key/aux/read-with-prefix-key binding key-desc) => OBJECT
 ;; ----------------------------------------------------------------------------
 (defun double-press/.do-key/aux/read-with-prefix-key (binding key-desc)
-  "Read a key and return the binding for that key in BINDING
-when BINDING is a prefix key. Handles help events explicitly."
+  "Read a key and return the binding for that key in BINDING.
+When BINDING is a prefix key, read the next event and look it up.
+KEY-DESC is the human-readable description of the triggering key.
+Handles help events explicitly."
   (when (keymapp binding)
     (let* ((global-map nil)
            (overriding-local-map binding)
@@ -372,9 +383,9 @@ when BINDING is a prefix key. Handles help events explicitly."
         (setq key (if (vectorp key) key (vector key)))
         (setq key-def (and key (lookup-key binding key)))
         (when (not key-def)
-          (error (format "%s %s is undefined"
-                         key-desc
-                         (key-description key))))
+          (error "%s %s is undefined"
+                 key-desc
+                 (key-description key)))
         (setq binding key-def))))
   binding)
 
@@ -399,12 +410,13 @@ when BINDING is a prefix key. Handles help events explicitly."
 ;;  (double-press/.display-help keymap key-desc) => VOID
 ;; ----------------------------------------------------------------------------
 (defun double-press/.display-help (keymap key-desc)
-  "Show help for KEYMAP. Uses `describe-keymap' when available."
+  "Show help for KEYMAP with a header based on KEY-DESC.
+Uses `describe-keymap' when available."
   (let ((help-header (format "Bindings in %s:\n\n" key-desc)))
     (cond
      ;; When `describe-keymap' is available
-     ((fboundp 'describe-keymap)
-      (funcall 'describe-keymap keymap)
+      ((fboundp 'describe-keymap)
+       (funcall #'describe-keymap keymap)
       (save-excursion
         (with-current-buffer "*Help*"
           (let ((buffer-read-only nil))
@@ -428,7 +440,8 @@ when BINDING is a prefix key. Handles help events explicitly."
 ;;  (double-press/doc/.dispatcher-desc single-key-def double-key-def) => string
 ;; ----------------------------------------------------------------------------
 (defun double-press/doc/.dispatcher-desc (single-key-def double-key-def)
-  ;; Provide a docstring so `describe-key` can show single/double bindings.
+  "Return a dispatcher docstring from SINGLE-KEY-DEF and DOUBLE-KEY-DEF.
+This helps `describe-key' show single-press and double-press bindings."
   (let* ((single-key-def-desc (double-press/doc/.key-def-desc single-key-def))
          (double-key-def-desc (double-press/doc/.key-def-desc double-key-def))
          (single-keymap-sym (and (keymapp single-key-def)
@@ -460,6 +473,7 @@ when BINDING is a prefix key. Handles help events explicitly."
 ;;  (double-press/doc/.key-def-desc key-def) => string
 ;; ----------------------------------------------------------------------------
 (defun double-press/doc/.key-def-desc (key-def)
+  "Return a human-readable description for KEY-DEF."
   (cond ((null key-def) "none")
         ((keymapp key-def)
          (or (and (symbolp key-def) (boundp key-def)
@@ -478,6 +492,7 @@ when BINDING is a prefix key. Handles help events explicitly."
 ;;  (double-press/doc/.keymap-desc keymap) => string
 ;; ----------------------------------------------------------------------------
 (defun double-press/doc/.keymap-desc (keymap)
+  "Return a human-readable listing for KEYMAP bindings."
   (with-temp-buffer
     (map-keymap
      (lambda (ev key-def)
@@ -494,7 +509,7 @@ when BINDING is a prefix key. Handles help events explicitly."
 ;;  (double-press/doc/.find-keymap-var-name keymap) => string
 ;; ----------------------------------------------------------------------------
 (defun double-press/doc/.find-keymap-var-name (keymap)
-  "Heuristically find a global symbol that holds KEYMAP.
+  "Return a global symbol holding KEYMAP.
 Prefers symbols that look like real keymap globals and avoids common
 let-bound locals, especially on dynamic-scope Emacs (e.g., 23)."
   (let (candidates)
@@ -522,5 +537,8 @@ let-bound locals, especially on dynamic-scope Emacs (e.g., 23)."
              (push (cons score sym) candidates))))))
     (when candidates
       (cdr (car (sort candidates (lambda (a b) (> (car a) (car b)))))))))
+
+;; Provide feature at end of file per packaging conventions.
+(provide 'double-press)
 
 ;;; double-press.el ends here
