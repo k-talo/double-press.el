@@ -51,8 +51,8 @@ this uses `describe-keymap` and shows a short header with the bound key.
 
 ```emacs-lisp
 (double-press-define-key global-map (kbd "<f8>")
-  :on-single-press 'magit-status
-  :on-double-press 'magit-commit)
+                         :on-single-press 'magit-status
+                         :on-double-press 'magit-commit)
 ```
 - **Single-press**: Open status (`magit-status`).
 - **Double-press**: Start a commit transient (`magit-commit`).

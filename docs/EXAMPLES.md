@@ -21,8 +21,8 @@ Open status on single-press; start a commit transient on double-press:
 
 ```emacs-lisp
 (double-press-define-key global-map (kbd "<f8>")
-  :on-single-press 'magit-status
-  :on-double-press 'magit-commit)
+                         :on-single-press 'magit-status
+                         :on-double-press 'magit-commit)
 ```
 
 Tips
@@ -36,8 +36,8 @@ Keep standard query replace on single-press; escalate to regex on double-press:
 
 ```emacs-lisp
 (double-press-define-key global-map (kbd "M-%")
-  :on-single-press 'query-replace
-  :on-double-press 'query-replace-regexp)
+                         :on-single-press 'query-replace
+                         :on-double-press 'query-replace-regexp)
 ```
 
 ---
@@ -48,8 +48,8 @@ Keep the default quoted insert on single-press; comment the active region on dou
 
 ```emacs-lisp
 (double-press-define-key global-map (kbd "C-q")
-  :on-single-press 'quoted-insert
-  :on-double-press 'comment-region)
+                         :on-single-press 'quoted-insert
+                         :on-double-press 'comment-region)
 ```
 
 Tips
@@ -69,8 +69,8 @@ Group macro commands under `<f3>` while keeping `<f4>` repeat behavior untouched
 
 ;; <f3>: start recording (or insert counter), double-press to open kmacro prefix
 (double-press-define-key global-map (kbd "<f3>")
-  :on-single-press 'kmacro-start-macro-or-insert-counter
-  :on-double-press  kmacro-keymap)
+                         :on-single-press 'kmacro-start-macro-or-insert-counter
+                         :on-double-press kmacro-keymap)
 ```
 
 Tips
@@ -85,13 +85,13 @@ Keep default singles; use doubles for the complementary action:
 ```emacs-lisp
 ;; M-. : find definitions (single), find references (double)
 (double-press-define-key global-map (kbd "M-.")
-  :on-single-press 'xref-find-definitions
-  :on-double-press 'xref-find-references)
+                         :on-single-press 'xref-find-definitions
+                         :on-double-press 'xref-find-references)
 
 ;; M-, : go back (single), go forward (double)
 (double-press-define-key global-map (kbd "M-,")
-  :on-single-press 'xref-go-back
-  :on-double-press 'xref-go-forward)
+                         :on-single-press 'xref-go-back
+                         :on-double-press 'xref-go-forward)
 ```
 
 Tips
@@ -117,8 +117,8 @@ single-press behavior intact:
 (define-key my-display-map (kbd "M-w") 'set-frame-width)
 
 (double-press-define-key global-map (kbd "M-w")
-  :on-single-press 'copy-region-as-kill
-  :on-double-press 'my-display-map)
+                         :on-single-press 'copy-region-as-kill
+                         :on-double-press 'my-display-map)
 ```
 
 Tips
