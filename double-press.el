@@ -105,7 +105,12 @@
 
 ;;;###autoload
 (defcustom double-press-timeout 0.4
-  "Interval of a \"double press\" key event in seconds."
+  "Interval of a \"double press\" key event in seconds.
+
+Typical double-press or double-click thresholds are around 0.3-0.5 s.
+Start at 0.35-0.40 for stability; try 0.25-0.30 for a snappier feel.
+If single-presses feel delayed, lower this; if double-presses are
+missed, raise it."
   :type  'float
   :group 'double-press)
 
