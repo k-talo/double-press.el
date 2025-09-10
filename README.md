@@ -29,10 +29,10 @@ This enables you to bind two related actions to a single, easy-to-press key, red
 
 ## Basic Usage
 
-Use the `double-press/define-key` function to define your keybindings.
+Use the `double-press-define-key` function to define your keybindings.
 
 ```emacs-lisp
-(double-press/define-key keymap key
+(double-press-define-key keymap key
                          :on-single-press command-for-single-press
                          :on-double-press command-for-double-press)
 ```
@@ -48,7 +48,7 @@ this uses `describe-keymap` and shows a short header with the bound key.
 - With modifiers: hold the modifier(s) (e.g., `Meta`/`Ctrl`/`Alt`/`Super`) and quickly press the non-modifier key twice.
   - Example: hold `Meta` and press `.` twice quickly -> `<double> M-.`.
 - Do not double-tap the modifier itself; keep it held while double-pressing the target key.
-- The timeout (maximum interval between the two presses) is controlled by `double-press/timeout`.
+- The timeout (maximum interval between the two presses) is controlled by `double-press-timeout`.
 
 ---
 
@@ -91,7 +91,7 @@ Combine the essential programming actions of jumping to a definition and returni
 - **Double-press**: Pop back from the jump (`xref-pop-marker-stack`).
 
 ```emacs-lisp
-(double-press/define-key global-map (kbd "M-.")
+(double-press-define-key global-map (kbd "M-.")
                          :on-single-press 'xref-find-definitions
                          :on-double-press 'xref-pop-marker-stack)
 ```
@@ -104,7 +104,7 @@ Unify the query-replace commands, escalating from a standard replace to a more p
 - **Double-press**: Regex query-replace (`query-replace-regexp`).
 
 ```emacs-lisp
-(double-press/define-key global-map (kbd "M-%")
+(double-press-define-key global-map (kbd "M-%")
                          :on-single-press 'query-replace
                          :on-double-press 'query-replace-regexp)
 ```
@@ -126,7 +126,7 @@ Turn a convenient key into a small prefix for display and zoom commands on doubl
 (define-key my-display-map (kbd "C-h") 'set-frame-height)
 (define-key my-display-map (kbd "C-w") 'set-frame-width)
 
-(double-press/define-key global-map (kbd "C-l")
+(double-press-define-key global-map (kbd "C-l")
   :on-single-press 'recenter-top-bottom
   :on-double-press 'my-display-map)
 ```
@@ -137,10 +137,10 @@ See more patterns and ready-to-use snippets in [docs/Examples.md](docs/EXAMPLES.
 
 ## Configuration
 
-The timeout for detecting a double-press can be customized by setting the `double-press/timeout` variable (default is 0.4 seconds).
+The timeout for detecting a double-press can be customized by setting the `double-press-timeout` variable (default is 0.4 seconds).
 
 ```emacs-lisp
-(setq double-press/timeout 0.3) ;; Set to 0.3 seconds
+(setq double-press-timeout 0.3) ;; Set to 0.3 seconds
 ```
 
 ## Development: Compile & Test
