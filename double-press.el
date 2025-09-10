@@ -8,7 +8,7 @@
 ;; Keywords: abbrev, convenience, emulations, wp
 ;; URL: https://github.com/k-talo/double-press.el
 ;; Maintainer: K-talo Miyazaki <Keitaro dot Miyazaki at gmail dot com>
-;; Version: 2.0.0
+;; Version: 3.0.0
 ;; Package-Requires: ((emacs "24.4"))
 
 ;; This file is not part of GNU Emacs.
@@ -51,6 +51,12 @@
 
 ;;; Change Log:
 
+;; v3.0.0  Wed Sep 10 10:30:00 2025 JST
+;;   - Breaking: rename all public and private APIs to dash style (-)
+;;     per MELPA guidelines.
+;;   - Remove slash-style names; no aliases provided.
+;;   - Update docs and tests to use dash names.
+
 ;; v2.0.0  Mon Sep  8 10:16:00 2025 JST
 ;;   - Drop Emacs 23 support; require Emacs 24.4+.
 
@@ -79,7 +85,7 @@
 
 ;;; Code:
 
-(defconst double-press-version "2.0.0"
+(defconst double-press-version "3.0.0"
   "Version of the double-press package.")
 
 ;; Emacs 24.4+ baseline: use cl-lib directly.
