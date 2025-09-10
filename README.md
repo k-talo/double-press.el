@@ -77,9 +77,9 @@ See more patterns, including personal prefix examples, in [docs/EXAMPLES.md](doc
 ## How Double-Press Works
 
 - Single key: quickly press the same key twice within the time window.
-  - Example: press `<f8>` twice quickly -> `<double> <f8>`.
+  - Example: press `<f8>` twice quickly; this produces `<double> <f8>`.
 - With modifiers: hold the modifier(s) (e.g., `Meta`/`Ctrl`/`Alt`/`Super`) and quickly press the non-modifier key twice.
-  - Example: hold `Meta` and press `.` twice quickly -> `<double> M-.`.
+  - Example: hold `Meta` and press `.` twice quickly; this produces `<double> M-.`.
 - Do not double-tap the modifier itself; keep it held while double-pressing the target key.
 - The timeout (maximum interval between the two presses) is controlled by `double-press-timeout`.
 
