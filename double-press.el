@@ -161,11 +161,12 @@ double-press bindings.
 
 Example:
 
-  (define-prefix-command \\='my-window-map)
-  (define-key my-window-map (kbd \"s\") \\='split-window-below)
-  (double-press-define-key global-map (kbd \"M-w\")
-    :on-single-press \\='copy-region-as-kill
-    :on-double-press \\='my-window-map)
+  ;; Escalate query replace: single press runs \\='query-replace; double press
+  ;; runs \\='query-replace-regexp.
+
+  (double-press-define-key global-map (kbd \"M-%\")
+                           :on-single-press \\='query-replace
+                           :on-double-press \\='query-replace-regexp)
 
 See also `define-key\\=', `double-press-timeout\\=', and
 `double-press-use-prompt\\='."
