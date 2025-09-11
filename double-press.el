@@ -1,7 +1,7 @@
 ;;; double-press.el --- Double-press key dispatcher -*- lexical-binding: t; -*-
 ;; SPDX-License-Identifier: GPL-3.0-or-later
 
-;; Copyright (C) 2010-2012, 2025 K-talo Miyazaki, all rights reserved.
+;; Copyright (C) 2010-2012, 2025 K-talo Miyazaki
 
 ;; Author: K-talo Miyazaki <Keitaro dot Miyazaki at gmail dot com>
 ;; Created: Fri Dec 24 02:33:06 2010 JST
