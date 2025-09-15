@@ -558,7 +558,7 @@ This helps `describe-key' show single-press and double-press bindings."
        (let* ((vec (vector ev))
               (key-desc (condition-case _
                             (key-description vec)
-                          (error (format "%S" ev))))
+                          (error "%S" ev)))
               (key-def-desc (double-press--doc-key-def-desc key-def)))
          (insert (format "  %s -> %s\n" key-desc key-def-desc))))
      keymap)
