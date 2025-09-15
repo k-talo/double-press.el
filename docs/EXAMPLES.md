@@ -78,7 +78,7 @@ Tips
 
 ---
 
-## Xref: Definitions, References, and History
+## Xref: Definitions, References, and History (25.1+)
 
 Keep default singles; use doubles for the complementary action:
 
@@ -89,6 +89,8 @@ Keep default singles; use doubles for the complementary action:
                          :on-double-press 'xref-find-references)
 
 ;; M-, : go back (single), go forward (double)
+;; Emacs 29.1+: xref-go-back/xref-go-forward.
+;; Older Emacs: use xref-pop-marker-stack instead of xref-go-back; omit xref-go-forward.
 (double-press-define-key global-map (kbd "M-,")
                          :on-single-press 'xref-go-back
                          :on-double-press 'xref-go-forward)
