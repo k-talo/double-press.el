@@ -3,11 +3,11 @@
 
 ;; Copyright (C) 2010-2012, 2025 K-talo Miyazaki
 
-;; Author: K-talo Miyazaki <Keitaro dot Miyazaki at gmail dot com>
+;; Author: K-talo Miyazaki <Keitaro.Miyazaki@gmail.com>
 ;; Created: Fri Dec 24 02:33:06 2010 JST
 ;; Keywords: abbrev, convenience, emulations, wp
 ;; URL: https://github.com/k-talo/double-press.el
-;; Maintainer: K-talo Miyazaki <Keitaro dot Miyazaki at gmail dot com>
+;; Maintainer: K-talo Miyazaki <Keitaro.Miyazaki@gmail.com>
 ;; Version: 3.0.1
 ;; Package-Requires: ((emacs "24.4"))
 

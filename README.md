@@ -1,6 +1,6 @@
-# double-press.el
+# double-press.el - Double-press key dispatcher
 
-Provides a keyboard operation method corresponding to a mouse double-click, extending Emacs's keybinding capabilities.
+[![License: GPLv3](https://img.shields.io/badge/license-GPLv3-blue.svg)](LICENSE) [![Emacs](https://img.shields.io/badge/Emacs-24.4%2B-blueviolet.svg)](#compatibility)
 
 
 ## Core Concept
@@ -156,6 +156,12 @@ Instead, `double-press.el` is most effective when used with keys that are typica
 - Editing keyboard macros that include double-press key sequences with `kmacro-step-edit-macro` (`C-x C-k SPC`) may corrupt the macro contents.
   - Workaround: Use `edit-kbd-macro` (`C-x C-k e`) to edit, and finish with `C-c C-c`.
   - This limitation applies only when the macro contains double-press sequences; ordinary macros are unaffected.
+
+## Reporting Issues
+
+Please open issues on the GitHub tracker:
+
+https://github.com/k-talo/double-press.el/issues
 
 ## License
 
