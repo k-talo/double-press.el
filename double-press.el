@@ -141,11 +141,11 @@ missed, raise it."
   "Bind KEY in KEYMAP to two actions: ON-SINGLE-PRESS and ON-DOUBLE-PRESS.
 
 Returns the dispatcher (an uninterned symbol bound to an interactive
-command) installed at KEY. The dispatcher decides between the two
+command) installed at KEY.  The dispatcher decides between the two
 bindings by timing: a single press or a quick double-press within
 `double-press-timeout\\=' seconds.
 
-KEY may be a string or a vector of events. Using [t] as KEY creates a
+KEY may be a string or a vector of events.  Using [t] as KEY creates a
 default definition used for any event not otherwise defined in KEYMAP.
 
 ON-SINGLE-PRESS and ON-DOUBLE-PRESS accept any key definition:
@@ -226,8 +226,9 @@ ignored."
 
 ;; Optional helper to clear [single]/[double] hints when keys are redefined.
 ;; This is invasive (advises `define-key'), so keep it opt-in.
-;; Users can enable it via `M-x double-press-activate-where-is-helper' or
-;; by customizing `double-press-use-where-is-helper'.
+;; Enable via Customize (e.g., `customize-set-variable' or `setopt' on Emacs 29.1+) or
+;; use `M-x double-press-activate-where-is-helper'.  Note: `setq' does not
+;; run the option's :set handler and will not toggle the advice.
 
 ;;;###autoload
 (defun double-press-activate-where-is-helper ()
@@ -245,14 +246,17 @@ ignored."
 
 ;;;###autoload
 (defcustom double-press-use-where-is-helper nil
-  "When non-nil, enable an advice on `define-key' that clears stale
-[single]/[double] hints inserted for `where-is'.  This keeps
-`where-is' output in sync when keys bound via `double-press-define-key'
-are later redefined.
+  "When non-nil, enable advice on `define-key' to clear `where-is' hints.
 
-Because this advises a core function, it is disabled by default.  Set
-this to non-nil or call `double-press-activate-where-is-helper' to opt
-in.  Use `double-press-deactivate-where-is-helper' to opt out."
+This helper removes stale entries from the auxiliary [single]/[double]
+submaps so that `where-is' stays in sync when keys defined via
+`double-press-define-key' are later rebound.
+
+Because this advises a core function, it is disabled by default.  Enable
+it via Customize (e.g., `customize-set-variable' or `setopt' on Emacs 29.1+)
+or call `double-press-activate-where-is-helper'.  Disable via Customize or
+call `double-press-deactivate-where-is-helper'.  A plain `setq' does not run
+the option's :set handler and will not toggle the advice."
   :type 'boolean
   :group 'double-press
   :set (lambda (sym val)

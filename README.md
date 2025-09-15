@@ -98,6 +98,29 @@ Guidelines
 (setq double-press-timeout 0.35) ;; Example: stable starting point
 ```
 
+### Optional: keep `where-is` hints in sync
+
+When keys bound via `double-press-define-key` are later rebound, you can
+optionally clear the auxiliary `[single]`/`[double]` hints so that
+`where-is` stays accurate. This helper advises `define-key`, so it is
+disabled by default. Enable it explicitly via Customize or a command:
+
+```emacs-lisp
+;; Enable (Customize)
+(customize-set-variable 'double-press-use-where-is-helper t)
+;; Emacs 29.1+: alternatively use setopt
+;; (setopt double-press-use-where-is-helper t)
+;; Enable (command)
+(double-press-activate-where-is-helper)
+
+;; Disable (Customize)
+(customize-set-variable 'double-press-use-where-is-helper nil)
+;; Emacs 29.1+: alternatively use setopt
+;; (setopt double-press-use-where-is-helper nil)
+;; Disable (command)
+(double-press-deactivate-where-is-helper)
+```
+
 ## A Crucial Note on Key Selection
 
 The utility of this library depends heavily on choosing the right keys to bind.

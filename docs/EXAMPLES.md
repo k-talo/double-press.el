@@ -12,6 +12,7 @@ Notes
 - For `<double> + modifiers + key`: hold the modifier(s) and quickly press the non-modifier key twice; do not double-tap the modifier itself (see [README: How Double-Press Works](../README.md#how-double-press-works)).
 - If a double-press leads to a prefix keymap, you can press `C-h` or `<f1>` to see its help.
 - Looking for overview and setup? See the [README](../README.md).
+- To keep `where-is` output in sync after rebinds, you can enable the optional helper via Customize or command (see README).
 
 ---
 
