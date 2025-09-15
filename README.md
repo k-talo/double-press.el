@@ -4,6 +4,7 @@
 
 
 ## Core Concept
+Double-click, adapted to your keyboard.
 
 `double-press.el` offers a simple and powerful feature: it allows you to assign two different commands to the **same key**, distinguishing between a single press and a quick double-press (a "double press").
 
