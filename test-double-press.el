@@ -117,19 +117,23 @@
 (ert-deftest double-press-define-key-adds-hints-and-advice-clears ()
   (let* ((km (make-sparse-keymap))
          (key (kbd "x")))
-    (double-press-define-key km key
-                             :on-single-press 'next-line
-                             :on-double-press 'other-window)
-    (let ((single-map (lookup-key km [single]))
-          (double-map (lookup-key km [double])))
-      (should (keymapp single-map))
-      (should (keymapp double-map))
-      (should (eq (lookup-key single-map key) 'next-line))
-      (should (eq (lookup-key double-map key) 'other-window))
-      ;; Redefine original key; advice should clear hints
-      (define-key km key 'self-insert-command)
-      (should (null (lookup-key single-map key)))
-      (should (null (lookup-key double-map key))))))
+    (unwind-protect
+        (progn
+          (double-press-activate-where-is-helper)
+          (double-press-define-key km key
+                                   :on-single-press 'next-line
+                                   :on-double-press 'other-window)
+          (let ((single-map (lookup-key km [single]))
+                (double-map (lookup-key km [double])))
+            (should (keymapp single-map))
+            (should (keymapp double-map))
+            (should (eq (lookup-key single-map key) 'next-line))
+            (should (eq (lookup-key double-map key) 'other-window))
+            ;; Redefine original key; advice should clear hints
+            (define-key km key 'self-insert-command)
+            (should (null (lookup-key single-map key)))
+            (should (null (lookup-key double-map key)))))
+      (double-press-deactivate-where-is-helper))))
 
 ;;; prompt behavior when reading from prefix map
 
@@ -230,19 +234,23 @@
 (ert-deftest double-press-define-key-advice-clears-on-rebind ()
   (let* ((km (make-sparse-keymap))
          (key (kbd "y")))
-    (double-press-define-key km key
-                             :on-single-press 'next-line
-                             :on-double-press 'other-window)
-    (let ((single-map (lookup-key km [single]))
-          (double-map (lookup-key km [double])))
-      (should (keymapp single-map))
-      (should (keymapp double-map))
-      (should (eq (lookup-key single-map key) 'next-line))
-      (should (eq (lookup-key double-map key) 'other-window))
-      ;; Rebind original key; advice should clear hints
-      (define-key km key 'self-insert-command)
-      (should (null (lookup-key single-map key)))
-      (should (null (lookup-key double-map key))))))
+    (unwind-protect
+        (progn
+          (double-press-activate-where-is-helper)
+          (double-press-define-key km key
+                                   :on-single-press 'next-line
+                                   :on-double-press 'other-window)
+          (let ((single-map (lookup-key km [single]))
+                (double-map (lookup-key km [double])))
+            (should (keymapp single-map))
+            (should (keymapp double-map))
+            (should (eq (lookup-key single-map key) 'next-line))
+            (should (eq (lookup-key double-map key) 'other-window))
+            ;; Rebind original key; advice should clear hints
+            (define-key km key 'self-insert-command)
+            (should (null (lookup-key single-map key)))
+            (should (null (lookup-key double-map key)))))
+      (double-press-deactivate-where-is-helper))))
 
 ;;; ensure hints are added on double-press-define-key
 

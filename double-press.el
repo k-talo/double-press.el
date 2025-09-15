@@ -224,7 +224,42 @@ ignored."
         (and (keymapp single-map) (define-key single-map key nil))
         (and (keymapp double-map) (define-key double-map key nil))))))
 
-(advice-add 'define-key :before #'double-press--define-key-advice)
+;; Optional helper to clear [single]/[double] hints when keys are redefined.
+;; This is invasive (advises `define-key'), so keep it opt-in.
+;; Users can enable it via `M-x double-press-activate-where-is-helper' or
+;; by customizing `double-press-use-where-is-helper'.
+
+;;;###autoload
+(defun double-press-activate-where-is-helper ()
+  "Enable the `define-key' advice that clears [single]/[double] hints."
+  (interactive)
+  (unless (advice-member-p #'double-press--define-key-advice 'define-key)
+    (advice-add 'define-key :before #'double-press--define-key-advice)))
+
+;;;###autoload
+(defun double-press-deactivate-where-is-helper ()
+  "Disable the `define-key' advice that clears [single]/[double] hints."
+  (interactive)
+  (when (advice-member-p #'double-press--define-key-advice 'define-key)
+    (advice-remove 'define-key #'double-press--define-key-advice)))
+
+;;;###autoload
+(defcustom double-press-use-where-is-helper nil
+  "When non-nil, enable an advice on `define-key' that clears stale
+[single]/[double] hints inserted for `where-is'.  This keeps
+`where-is' output in sync when keys bound via `double-press-define-key'
+are later redefined.
+
+Because this advises a core function, it is disabled by default.  Set
+this to non-nil or call `double-press-activate-where-is-helper' to opt
+in.  Use `double-press-deactivate-where-is-helper' to opt out."
+  :type 'boolean
+  :group 'double-press
+  :set (lambda (sym val)
+         (set-default sym val)
+         (if val
+             (double-press-activate-where-is-helper)
+           (double-press-deactivate-where-is-helper))))
 
 
 
