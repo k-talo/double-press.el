@@ -27,6 +27,20 @@ This enables you to bind two related actions to a single, easy-to-press key, red
 ```emacs-lisp
 (require 'double-press)
 ```
+
+### Optional: Sync `where-is` hints (Recommended)
+
+To ensure `where-is` (`C-h w`) accurately reflects your bindings after remapping keys, you can enable a helper. This is recommended for a better experience.
+
+After `(require 'double-press)`, add:
+
+```emacs-lisp
+(customize-set-variable 'double-press-use-where-is-helper t)
+;; On Emacs 29.1+, you can use setopt:
+;; (setopt double-press-use-where-is-helper t)
+```
+
+For more details, see the [Configuration](#dp-configuration) section.
  
 ## Compatibility
 

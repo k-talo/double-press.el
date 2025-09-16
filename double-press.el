@@ -43,8 +43,9 @@
 ;;     :on-double-press 'my-window-map)
 ;;
 ;; Customization:
-;;   - double-press-timeout    ;; maximum interval between presses (seconds)
-;;   - double-press-use-prompt ;; show a prompt when reading from a prefix map
+;;   - double-press-timeout              ;; maximum interval between presses (seconds)
+;;   - double-press-use-prompt           ;; show a prompt when reading from a prefix map
+;;   - double-press-use-where-is-helper  ;; keep `where-is' hints in sync (opt-in)
 ;;   - Press C-h/<f1> inside a double-press prefix to see its bindings.
 ;;
 ;; See also: README.md (overview, setup) and docs/EXAMPLES.md (snippets).
